@@ -1,0 +1,38 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+*.env
+
+# pipenv files
+*.lock
+Pipfile.lock
+
+# Logs and temporary files
+*.log
+*.tmp
+tmp/
+
+# Static files
+staticfiles/
+
+# Public files (if dynamically generated or not needed in version control)
+public/
+
+# Ignore keys and sensitive information
+keys.json
+
+# Ignore IDE-specific and system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Ignore deployment files
+passenger_wsgi.py

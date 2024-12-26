@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Additional Analysis</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0 100px;
+        }
+
+        .msu-logo {
+            max-width: 400px;
+            height: 200px;
+            display: block;
+            margin: 20px auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #18453B;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #18453B;
+            padding-bottom: 10px;
+        }
+
+        .output-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: #22453a;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #22453a;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .button-container input[type="button"] {
+            padding: 10px 20px;
+            background-color: #22453a;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button-container input[type="button"]:hover {
+            background-color: #45a049;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button {
+            background-color: #18453B;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #12332c;
+        }
+
+        .info-box {
+            background-color: #ffd966;
+            /* Light yellow background color */
+            border: 1px solid #000;
+            /* Black border */
+            padding: 15px;
+            /* Add padding inside the box */
+            margin: 20px 0;
+            /* Add spacing around the box */
+            font-family: Arial, sans-serif;
+            /* Use a clean font */
+            color: #000;
+            /* Black text color */
+            line-height: 1.5;
+            /* Improve line spacing for readability */
+        }
+
+        .info-box p {
+            margin: 10px 0;
+            /* Space between paragraphs */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="msu-logo">
+        <img src="https://logos-world.net/wp-content/uploads/2022/07/Michigan-State-University-Primary-Logo.png"
+            alt="MSU Logo" width="400" height="200">
+    </div>
+
+    <div class="button-container">
+        <input type="button" value="Perform Economic Analysis for Extended Rotation"
+            onclick="performEconomicAnalysis()">
+    </div>
+
+    <h1>Output Tables for your Inputs</h1>
+    <div class="info-box">
+        <p><strong>ECOSYSTEM CARBON STOCKS</strong> are presented as positive numbers.</p>
+        <p><strong>ECOSYSTEM CARBON FLUX</strong> is shown as either positive or negative numbers. Positive(+) carbon
+            flux numbers are emissions and negative(-) carbon flux numbers demonstrate carbon sequestration (benefits).
+            Where emissions (positive numbers) are rendered, see the 'Possible explanations where calculator outputs
+            render estimated emissions' box in the 'Acronyms, Tabs, Citations' tab of this Workbook.</p>
+    </div>
+    <ul>
+        {% set output_count = 0 %}
+        {% for table in list_tables %}
+        {% set output_count = output_count + 1 %}
+
+        <li>
+            {# Determine table heading based on its content #}
+            <h3>
+                {% if loop.index0 == 0 %}
+                Harvested Wood Products Before and after Extending Rotation and Estimated Carbon Sequestration
+                {% elif loop.index0 == 1 %}
+                Detailed Ecosystem Carbon Scenario Projection No results for harvested wood products shown here (see
+                Forest Mgmt & HWP Results tab). See the original Spreadsheet for details.
+                {% elif loop.index0 == 2 %}
+                Ecosystem and Harvested Wood Products’ Carbon Impacts from Management/Silviculture Practices
+                {% else %}
+                Table {{ output_count }}
+                {% endif %}
+            </h3>
+
+            {% if table.columns[0].lower() == 'index' %}
+            <div class="output-title">Output {{ output_count }}</div>
+            {% endif %}
+
+            <table border="1">
+                <thead>
+                    <tr>
+                        {% for column in table.columns %}
+                        <th {% if loop.first %}style="text-decoration-line: underline;" {% endif %}>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table.values %}
+                    {% set is_header = false %}
+                    {% set first_cell = row[0]|string %}
+                    {% if "ECOSYSTEM CARBON IMPACTS From Forest Growth" in first_cell
+                    or "ECOSYSTEM CARBON IMPACTS From Harvest" in first_cell
+                    or "POST HARVEST CARBON IMPACTS" in first_cell %}
+                    {% set is_header = true %}
+                    {% endif %}
+                    <tr>
+                        {% if is_header %}
+                        <td colspan="{{ table.columns|length }}"
+                            style="font-weight: bold; background-color: #22453a; color: white; padding: 8px;">
+                            {{ first_cell }}
+                        </td>
+                        {% else %}
+                        {% for value in row %}
+                        <td>
+                            {% set text = value | string %}
+                            {% if "Ecosystem Carbon STOCKS (t CO2eq)" in text %}
+                            {{ text | replace("Ecosystem Carbon STOCKS (t CO2eq)", "<span
+                                style='text-decoration-line: underline'>Ecosystem Carbon STOCKS (t CO2eq)</span>") |
+                            safe }}
+                            {% elif "Cumulative Ecosystem Carbon FLUX (t CO2eq)" in text %}
+                            {{ text | replace("Cumulative Ecosystem Carbon FLUX (t CO2eq)", "<span
+                                style='text-decoration-line: underline'>Cumulative Ecosystem Carbon FLUX (t
+                                CO2eq)</span>") | safe }}
+                            {% elif "saw logs" in text %}
+                            {{ text | replace("saw logs", "<span style='text-decoration-line: underline'>saw
+                                logs</span>") | safe }}
+                            {% elif "pulpwood" in text %}
+                            {{ text | replace("pulpwood", "<span
+                                style='text-decoration-line: underline'>pulpwood</span>") | safe }}
+                            {% elif "fuelwood" in text %}
+                            {{ text | replace("fuelwood", "<span
+                                style='text-decoration-line: underline'>fuelwood</span>") | safe }}
+                            {% elif "bark" in text %}
+                            {{ text | replace("bark", "<span style='text-decoration-line: underline'>bark</span>") |
+                            safe }}
+                            {% elif "medium and large growing stock remaining in forest" in text %}
+                            {{ text | replace("medium and large growing stock remaining in forest", "<span
+                                style='text-decoration-line: underline'>medium and large growing stock remaining in
+                                forest</span>") | safe }}
+                            {% elif "without" in text %}
+                            {{ text | replace("without", "<span style='text-decoration-line: underline'>without</span>")
+                            | safe }}
+                            {% elif "with" in text %}
+                            {{ text | replace("with", "<span style='text-decoration-line: underline'>with</span>") |
+                            safe }}
+                            {% elif "From Harvest" in text %}
+                            {{ text | replace("From Harvest", "<span style='text-decoration-line: underline'>From
+                                Harvest</span>") | safe }}
+                            {% else %}
+                                {{ text }}
+                            {% endif %}
+                        </td>
+                            {% endfor %}
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="button-container">
+        <input type="button" value="Perform Economic Analysis for Extended Rotation"
+            onclick="performEconomicAnalysis()">
+    </div>
+    <hr>
+</body>
+<script>
+    function performEconomicAnalysis() {
+        const isExtended = localStorage.getItem("isExtended");
+        if (isExtended === "true") {
+            window.location = '/summary';
+        } else {
+            window.alert("Further analysis is only limited to Extended Rotation for forest carbon management");
+        }
+    }
+</script>
+
+</html>

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Carbon Tool</title>
+
+    <style>
+        /* .logo{
+            background-image: url('Michigan-State-University-Primary-Logo.png');
+            width: 200px;
+            height: 200px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin: 0 auto;
+        } */
+        /* Existing CSS unchanged */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0 100px;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #22453a;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        form {
+            width: 80%;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .button-container input[type="button"],
+        .button-container .loading-button {
+            padding: 10px 20px;
+            background-color: #22453a;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button-container input[type="button"]:hover,
+        .button-container .loading-button:hover {
+            background-color: #45a049;
+        }
+
+        .button-container .loading-button {
+            position: relative;
+        }
+
+        .loading-button span {
+            display: inline-block;
+            transition: 0.5s;
+        }
+
+        .loading-button span:after {
+            content: '\00bb';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            right: -10px;
+            transition: 0.5s;
+        }
+
+        .loading-button:hover span {
+            padding-right: 20px;
+        }
+
+        .loading-button:hover span:after {
+            opacity: 1;
+            right: 0;
+        }
+
+        .loading-button:active {
+            background: #45a049;
+        }
+
+        .button--loading .button__text {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .button--loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            border: 4px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: button-loading-spinner 1s ease infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+
+            to {
+                transform: rotate(1turn);
+            }
+        }
+
+        #forestDataTable {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        #forestDataTable th,
+        #forestDataTable td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #forestDataTable th {
+            background-color: #22453a;
+            color: white;
+        }
+
+        #forestDataTable tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .custom-footer {
+            background-color: #b5d1a7;
+            /* Light green background */
+            border: 2px solid #4d7942;
+            /* Darker green border */
+            /* padding: 20px; */
+            font-family: Arial, sans-serif;
+            color: #000;
+            /* Black text */
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            /* Space between text and logos */
+            align-items: center;
+            /* Align logos vertically with the text */
+        }
+
+        .footer-text {
+            flex: 1;
+            /* Take up remaining space */
+            text-align: center;
+            margin-right: 20px;
+            /* Space between text and logos */
+        }
+
+        .footer-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .footer-subtitle {
+            font-size: 14px;
+            margin-top: 0;
+        }
+
+        .footer-logos {
+            display: flex;
+            flex-direction: row;
+            /* Stack logos vertically */
+            /* gap: 10px; */
+            /* Add space between logos */
+        }
+
+        .footer-logo {
+            height: 99%;
+            /* Adjust size as needed */
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <div class="logo"></div> -->
+    <div class="msulogo">
+        <center><img src="https://logos-world.net/wp-content/uploads/2022/07/Michigan-State-University-Primary-Logo.png"
+                alt="MSU Logo" width="400" height="200"></center>
+        <form id="forestForm">
+            <h1>Forest Carbon Tool (Under Development)</h1>
+            <label for="name">Please enter name of the run:</label>
+            <input type="text" id="name" name="name" placeholder="Name" value="Run 1" required />
+
+            <label>Type of forest management treatment to be applied: </label>
+            <select id="forestManagementTreatment" name="forestManagementTreatment" required disabled>
+                <option value="1">Basic projection under forest maintainance (fm)</option>
+                <option value="2">Basic projection under fm, with harvest</option>
+                <option value="3" selected>Extended rotation</option>
+                <option value="4">Reforestation (natural)</option>
+                <option value="5">Reforestation (planted)</option>
+                <option value="6">Avoided deforestation</option>
+                <option value="7">Harvest</option>
+                <option value="8">Fire (prescribed or natural)</option>
+            </select>
+
+            <label for="area">Area subject to management activity or area of stratum (in acres)</label>
+            <input type="number" id="area" name="area" placeholder="Area" value="1000" required />
+
+            <label for="region">U.S. Region: </label>
+            <select id="region" name="region" required>
+                <option value="1">Select a Region </option>
+                <option value="2">Central States </option>
+                <option value="3">Great Plains </option>
+                <option value="4">Northeast </option>
+                <option value="5">Northern Lake States </option>
+                <option value="6" selected>Pacific Northwest Eastside </option>
+                <option value="7">Pacific Northwest Westside </option>
+                <option value="8">Pacific Southwest </option>
+                <option value="9">Rocky Mountain North </option>
+                <option value="10">Rocky Mountain South </option>
+                <option value="11">South Central </option>
+                <option value="12">Southeast </option>
+            </select>
+
+            <label for="forestTypeGroup">Forest Type Group (if reforesting, planned forest type group): </label>
+            <select id="forestTypeGroup" name="forestTypeGroup" required>
+                <option value="1">Select a forest type group </option>
+                <option value="2">Alder / maple group </option>
+                <option value="3">Aspen / birch group </option>
+                <option value="4">Elm / ash / cottonwood group </option>
+                <option value="5">Oak / hickory group </option>
+                <option value="6">Other hardwoods group </option>
+                <option value="7" selected>Tanoak / laurel group </option>
+                <option value="8">Western oak group </option>
+                <option value="9">Douglas-fir group </option>
+                <option value="10">Fir / spruce / mountain hemlock group </option>
+                <option value="11">Hemlock / Sitka spruce group </option>
+                <option value="12">Lodgepole pine group </option>
+                <option value="13">Other western softwoods group </option>
+                <option value="14">Pinyon / juniper group </option>
+                <option value="15">Ponderosa pine group </option>
+                <option value="16">Spruce / fir group </option>
+                <option value="17">Western larch group </option>
+                <option value="18">Western white pine group </option>
+                <option value="19">not sure, very few trees (ie, nonstocked) </option>
+                <option value="20">predominantly hardwood species, type not known </option>
+                <option value="21">predominantly softwood species, type not known </option>
+                <option value="22">predominantly woodland species, type not known </option>
+                <option value="23">Unknown </option>
+            </select>
+
+            <label for="origin">Planted or Natural Forest Origin: </label>
+            <select id="origin" name="origin" required>
+                <option value="1">Select origin type </option>
+                <option value="2">Planted </option>
+                <option value="3" selected>Natural </option>
+                <option value="4">Unknown </option>
+            </select>
+
+            <label for="age">Age Class: </label>
+            <select id="age" name="age" required>
+                <option value="1">Select an age class </option>
+                <option value="2">0-20 years </option>
+                <option value="3">21-40 years </option>
+                <option value="4">41-60 years </option>
+                <option value="5" selected>61-80 years </option>
+                <option value="6">81-100 years </option>
+                <option value="7">100+ years </option>
+                <option value="8">Unknown </option>
+            </select>
+
+            <label for="harvestYearsBusiness">How many years from now will you harvest under a business as usual
+                scenario? </label>
+            <select id="harvestYearsBusiness" name="harvestYearsBusiness" required>
+                <option value="1">Select the number of years from now when you plan to harvest </option>
+                <option value="2">0 </option>
+                <option value="3">5 </option>
+                <option value="4" selected>10 </option>
+                <option value="5">15 </option>
+                <option value="6">20 </option>
+                <option value="7">25 </option>
+                <option value="8">30 </option>
+                <option value="9">35 </option>
+                <option value="10">40 </option>
+                <option value="11">45 </option>
+                <option value="12">50 </option>
+            </select>
+
+            <label for="harvestYearsER">How many years from now will you harvest if you extend rotation? (must be
+                greater than BAU date) </label>
+            <select id="harvestYearsER" name="harvestYearsER" required>
+                <option value="1">Select the number of years from now when you plan to harvest </option>
+                <option value="2">0 </option>
+                <option value="3">5 </option>
+                <option value="4">10 </option>
+                <option value="5">15 </option>
+                <option value="6">20 </option>
+                <option value="7">25 </option>
+                <option value="8">30 </option>
+                <option value="9">35 </option>
+                <option value="10">40 </option>
+                <option value="11">45 </option>
+                <option value="12" selected>50 </option>
+            </select>
+
+            <div class="button-container">
+                <input type="button" value="Add/Submit" onclick="addEntryAndShowTable();">
+                <input type="button" value="Clear" onclick="ClearFields();">
+            </div>
+        </form>
+        <div id="tableContainer" class="hidden">
+            <h2>Forest Data Table</h2>
+            <table id="forestDataTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type of Forest Management Treatment</th>
+                        <th>Area</th>
+                        <th>Region</th>
+                        <th>Forest Group Type</th>
+                        <th>Origin</th>
+                        <th>Age</th>
+                        <th>Years under Business</th>
+                        <th>Years Extended Rotation</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Table body content will be added dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="button-container">
+            <!input type="button" value="Produce Output" onclick="redirectToOutput();">
+                <button type="button" class="loading-button hidden" id="submit-button">
+                    <span class="button__text">Display Output</span>
+                </button>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script>
+            var forestData = [];
+            let isProcessing = false;
+            let firstRegion = null;
+
+            function addEntryAndShowTable() {
+                // Gather form data
+                var formData = {
+                    name: document.getElementById("name").value,
+                    forestManagementTreatment: document.getElementById("forestManagementTreatment").options[document.getElementById("forestManagementTreatment").selectedIndex].text,
+                    area: document.getElementById("area").value,
+                    region: document.getElementById("region").options[document.getElementById("region").selectedIndex].text,
+                    regionValue: document.getElementById("region").value,
+                    forestTypeGroup: document.getElementById("forestTypeGroup").options[document.getElementById("forestTypeGroup").selectedIndex].text,
+                    origin: document.getElementById("origin").options[document.getElementById("origin").selectedIndex].text,
+                    age: document.getElementById("age").options[document.getElementById("age").selectedIndex].text,
+                    harvestYearsBusiness: document.getElementById("harvestYearsBusiness").options[document.getElementById("harvestYearsBusiness").selectedIndex].text,
+                    harvestYearsER: document.getElementById("harvestYearsER").options[document.getElementById("harvestYearsER").selectedIndex].text
+                };
+
+                if (firstRegion === null) {
+                    firstRegion = formData.regionValue;
+                } else if (formData.regionValue !== firstRegion) {
+                    alert("Please enter the same region for all the entries. To perform, economic analysis for different regions, please do it separately.");
+                    return;
+                }
+
+                // Validate all fields
+                if (!document.getElementById("forestForm").checkValidity()) {
+                    alert("Please fill in all required fields.");
+                    return;
+                }
+
+                // Create table row
+                var newRow = document.createElement("tr");
+                newRow.innerHTML = "<td>" + formData.name + "</td><td>" + formData.forestManagementTreatment + "</td><td>" + formData.area + "</td><td>" + formData.region + "</td><td>" + formData.forestTypeGroup +
+                    "</td><td>" + formData.origin + "</td><td>" + formData.age + "</td><td>" +
+                    formData.harvestYearsBusiness + "</td><td>" + formData.harvestYearsER + "</td>" +
+                    "<td><button onclick='deleteRow(" + (forestData.length - 1) + ")'>Delete</button></td>";
+                document.getElementById("tableBody").appendChild(newRow); // Append new row to table body
+
+                // Show the table
+                document.getElementById("tableContainer").classList.remove("hidden");
+                forestData.push(formData);
+
+                // Show the Display Output button
+                document.getElementById("submit-button").classList.remove("hidden");
+
+                // Clear form fields for the next entry
+                ClearFields();
+                localStorage.setItem("isExtended", formData.forestManagementTreatment === "Extended rotation");
+
+                isProcessing = true;
+                fetch('/submit_form', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ forestData: forestData, formData: formData }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        isProcessing = false;
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+
+            }
+
+            function deleteRow(index) {
+                // Delete the row from the table
+                document.getElementById("tableBody").deleteRow(index);
+
+                // Remove the corresponding data from the array
+                forestData.splice(index, 1);
+
+                // Send the index of the deleted row to the backend
+                fetch('/delete_row', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ deletedRowIdx: index }),
+                })
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log(data);
+                        // Optionally, do something with the response from the server
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            function ClearFields() {
+                document.getElementById("name").value = "";
+                document.getElementById("area").value = "";
+                // Do not clear the region field if an entry has been made
+                if (firstRegion === null) {
+                    document.getElementById("region").value = "1";
+                }
+                document.getElementById("forestTypeGroup").value = "1";
+                document.getElementById("origin").value = "1";
+                document.getElementById("age").value = "1";
+                document.getElementById("harvestYearsBusiness").value = "1";
+                document.getElementById("harvestYearsER").value = "1";
+            }
+
+            function produceOutput() {
+                if (isProcessing) {
+                    // Keep the button in the loading state if processing is not complete
+                    $('#submit-button').addClass("button--loading");
+                    setTimeout(produceOutput, 1000); // Check again after 1 second
+                } else {
+                    // Redirect to the output page if processing is complete
+                    $('#submit-button').removeClass("button--loading");
+                    location.href = '/output';
+                }
+            }
+
+            $('#submit-button').click(function () {
+                $(this).addClass("button--loading");
+                produceOutput();
+            });
+
+            // Object containing forest type options
+            const forestTypeOptions = {
+                '2': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Exotic hardwoods group' },
+                    { value: '5', text: 'Maple / beech / birch group' },
+                    { value: '6', text: 'Oak / gum / cypress group' },
+                    { value: '7', text: 'Oak / hickory group' },
+                    { value: '8', text: 'Oak / pine group' },
+                    { value: '9', text: 'Other hardwoods group' },
+                    { value: '10', text: 'Exotic softwoods group' },
+                    { value: '11', text: 'Loblolly / shortleaf pine group' },
+                    { value: '12', text: 'Other eastern softwoods group' },
+                    { value: '13', text: 'White / red / jack pine group' },
+                    { value: '14', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '15', text: 'predominantly hardwood species, type not known' },
+                    { value: '16', text: 'predominantly softwood species, type not known' },
+                    { value: '17', text: 'Unknown' }
+                ],
+                '3': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Exotic hardwoods group' },
+                    { value: '5', text: 'Maple / beech / birch group' },
+                    { value: '6', text: 'Oak / gum / cypress group' },
+                    { value: '7', text: 'Oak / hickory group' },
+                    { value: '8', text: 'Oak / pine group' },
+                    { value: '9', text: 'Other hardwoods group' },
+                    { value: '10', text: 'Woodland hardwoods group' },
+                    { value: '11', text: 'Douglas-fir group' },
+                    { value: '12', text: 'Exotic softwoods group' },
+                    { value: '13', text: 'Loblolly / shortleaf pine group' },
+                    { value: '14', text: 'Other eastern softwoods group' },
+                    { value: '15', text: 'Pinyon / juniper group' },
+                    { value: '16', text: 'Ponderosa pine group' },
+                    { value: '17', text: 'Spruce / fir group' },
+                    { value: '18', text: 'White / red / jack pine group' },
+                    { value: '19', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '20', text: 'predominantly hardwood species, type not known' },
+                    { value: '21', text: 'predominantly softwood species, type not known' },
+                    { value: '22', text: 'predominantly woodland species, type not known' },
+                    { value: '23', text: 'Unknown' }
+                ],
+                '4': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Exotic hardwoods group' },
+                    { value: '5', text: 'Maple / beech / birch group' },
+                    { value: '6', text: 'Oak / gum / cypress group' },
+                    { value: '7', text: 'Oak / hickory group' },
+                    { value: '8', text: 'Oak / pine group' },
+                    { value: '9', text: 'Other hardwoods group' },
+                    { value: '10', text: 'Woodland hardwoods group' },
+                    { value: '11', text: 'Douglas-fir group' },
+                    { value: '12', text: 'Exotic softwoods group' },
+                    { value: '13', text: 'Loblolly / shortleaf pine group' },
+                    { value: '14', text: 'Other eastern softwoods group' },
+                    { value: '15', text: 'Other softwoods group' },
+                    { value: '16', text: 'Spruce / fir group' },
+                    { value: '17', text: 'White / red / jack pine group' },
+                    { value: '18', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '19', text: 'predominantly hardwood species, type not known' },
+                    { value: '20', text: 'predominantly softwood species, type not known' },
+                    { value: '21', text: 'Unknown' }
+                ],
+                '5': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Maple / beech / birch group', selected: true },
+                    { value: '5', text: 'Oak / gum / cypress group' },
+                    { value: '6', text: 'Oak / hickory group' },
+                    { value: '7', text: 'Oak / pine group' },
+                    { value: '8', text: 'Other hardwoods group' },
+                    { value: '9', text: 'Douglas-fir group' },
+                    { value: '10', text: 'Exotic softwoods group' },
+                    { value: '11', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '12', text: 'Other eastern softwoods group' },
+                    { value: '13', text: 'Spruce / fir group' },
+                    { value: '14', text: 'White / red / jack pine group' },
+                    { value: '15', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '16', text: 'predominantly hardwood species, type not known' },
+                    { value: '17', text: 'predominantly softwood species, type not known' },
+                    { value: '18', text: 'Unknown' }
+                ],
+
+                '6': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Alder / maple group' },
+                    { value: '3', text: 'Aspen / birch group' },
+                    { value: '4', text: 'Elm / ash / cottonwood group' },
+                    { value: '5', text: 'Oak / hickory group' },
+                    { value: '6', text: 'Other hardwoods group' },
+                    { value: '7', text: 'Tanoak / laurel group' },
+                    { value: '8', text: 'Western oak group' },
+                    { value: '9', text: 'Douglas-fir group' },
+                    { value: '10', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '11', text: 'Hemlock / Sitka spruce group' },
+                    { value: '12', text: 'Lodgepole pine group' },
+                    { value: '13', text: 'Other western softwoods group' },
+                    { value: '14', text: 'Pinyon / juniper group' },
+                    { value: '15', text: 'Ponderosa pine group' },
+                    { value: '16', text: 'Spruce / fir group' },
+                    { value: '17', text: 'Western larch group' },
+                    { value: '18', text: 'Western white pine group' },
+                    { value: '19', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '20', text: 'predominantly hardwood species, type not known' },
+                    { value: '21', text: 'predominantly softwood species, type not known' },
+                    { value: '22', text: 'predominantly woodland species, type not known' },
+                    { value: '23', text: 'Unknown' }
+                ],
+                '7': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Alder / maple group' },
+                    { value: '3', text: 'Aspen / birch group' },
+                    { value: '4', text: 'Elm / ash / cottonwood group' },
+                    { value: '5', text: 'Other hardwoods group' },
+                    { value: '6', text: 'Tanoak / laurel group' },
+                    { value: '7', text: 'Western oak group' },
+                    { value: '8', text: 'Douglas-fir group' },
+                    { value: '9', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '10', text: 'Hemlock / Sitka spruce group' },
+                    { value: '11', text: 'Lodgepole pine group' },
+                    { value: '12', text: 'Other western softwoods group' },
+                    { value: '13', text: 'Ponderosa pine group' },
+                    { value: '14', text: 'Redwood group' },
+                    { value: '15', text: 'Western larch group' },
+                    { value: '16', text: 'Western white pine group' },
+                    { value: '17', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '18', text: 'predominantly hardwood species, type not known' },
+                    { value: '19', text: 'predominantly softwood species, type not known' },
+                    { value: '20', text: 'Unknown' }
+                ],
+                '8': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Alder / maple group' },
+                    { value: '3', text: 'Aspen / birch group' },
+                    { value: '4', text: 'Elm / ash / cottonwood group' },
+                    { value: '5', text: 'Exotic hardwoods group' },
+                    { value: '6', text: 'Other hardwoods group' },
+                    { value: '7', text: 'Tanoak / laurel group' },
+                    { value: '8', text: 'Western oak group' },
+                    { value: '9', text: 'Woodland hardwoods group' },
+                    { value: '10', text: 'California mixed conifer group' },
+                    { value: '11', text: 'Douglas-fir group' },
+                    { value: '12', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '13', text: 'Hemlock / Sitka spruce group' },
+                    { value: '14', text: 'Lodgepole pine group' },
+                    { value: '15', text: 'Other western softwoods group' },
+                    { value: '16', text: 'Pinyon / juniper group' },
+                    { value: '17', text: 'Ponderosa pine group' },
+                    { value: '18', text: 'Redwood group' },
+                    { value: '19', text: 'Western white pine group' },
+                    { value: '20', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '21', text: 'predominantly hardwood species, type not known' },
+                    { value: '22', text: 'predominantly softwood species, type not known' },
+                    { value: '23', text: 'predominantly woodland species, type not known' },
+                    { value: '24', text: 'Unknown' }
+                ],
+                '9': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Alder / maple group' },
+                    { value: '3', text: 'Aspen / birch group' },
+                    { value: '4', text: 'Elm / ash / cottonwood group' },
+                    { value: '5', text: 'Oak / hickory group' },
+                    { value: '6', text: 'Other hardwoods group' },
+                    { value: '7', text: 'Woodland hardwoods group' },
+                    { value: '8', text: 'Douglas-fir group' },
+                    { value: '9', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '10', text: 'Hemlock / Sitka spruce group' },
+                    { value: '11', text: 'Lodgepole pine group' },
+                    { value: '12', text: 'Other western softwoods group' },
+                    { value: '13', text: 'Pinyon / juniper group' },
+                    { value: '14', text: 'Ponderosa pine group' },
+                    { value: '15', text: 'Western larch group' },
+                    { value: '16', text: 'Western white pine group' },
+                    { value: '17', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '18', text: 'predominantly hardwood species, type not known' },
+                    { value: '19', text: 'predominantly softwood species, type not known' },
+                    { value: '20', text: 'predominantly woodland species, type not known' },
+                    { value: '21', text: 'Unknown' }
+                ],
+                '10': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Exotic hardwoods group' },
+                    { value: '5', text: 'Oak / hickory group' },
+                    { value: '6', text: 'Other hardwoods group' },
+                    { value: '7', text: 'Woodland hardwoods group' },
+                    { value: '8', text: 'Douglas-fir group' },
+                    { value: '9', text: 'Fir / spruce / mountain hemlock group' },
+                    { value: '10', text: 'Lodgepole pine group' },
+                    { value: '11', text: 'Other western softwoods group' },
+                    { value: '12', text: 'Pinyon / juniper group' },
+                    { value: '13', text: 'Ponderosa pine group' },
+                    { value: '14', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '15', text: 'predominantly hardwood species, type not known' },
+                    { value: '16', text: 'predominantly softwood species, type not known' },
+                    { value: '17', text: 'predominantly woodland species, type not known' },
+                    { value: '18', text: 'Unknown' }
+                ],
+                '11': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Elm / ash / cottonwood group' },
+                    { value: '3', text: 'Exotic hardwoods group' },
+                    { value: '4', text: 'Maple / beech / birch group' },
+                    { value: '5', text: 'Oak / gum / cypress group' },
+                    { value: '6', text: 'Oak / hickory group' },
+                    { value: '7', text: 'Oak / pine group' },
+                    { value: '8', text: 'Other hardwoods group' },
+                    { value: '9', text: 'Woodland hardwoods group' },
+                    { value: '10', text: 'Loblolly / shortleaf pine group' },
+                    { value: '11', text: 'Longleaf / slash pine group' },
+                    { value: '12', text: 'Other eastern softwoods group' },
+                    { value: '13', text: 'Pinyon / juniper group' },
+                    { value: '14', text: 'White / red / jack pine group' },
+                    { value: '15', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '16', text: 'predominantly hardwood species, type not known' },
+                    { value: '17', text: 'predominantly softwood species, type not known' },
+                    { value: '18', text: 'predominantly woodland species, type not known' },
+                    { value: '19', text: 'Unknown' }
+                ],
+                '12': [
+                    { value: '1', text: 'Select a forest type group' },
+                    { value: '2', text: 'Aspen / birch group' },
+                    { value: '3', text: 'Elm / ash / cottonwood group' },
+                    { value: '4', text: 'Exotic hardwoods group' },
+                    { value: '5', text: 'Maple / beech / birch group' },
+                    { value: '6', text: 'Oak / gum / cypress group' },
+                    { value: '7', text: 'Oak / hickory group' },
+                    { value: '8', text: 'Oak / pine group' },
+                    { value: '9', text: 'Other hardwoods group' },
+                    { value: '10', text: 'Tropical hardwoods group' },
+                    { value: '11', text: 'Exotic softwoods group' },
+                    { value: '12', text: 'Loblolly / shortleaf pine group' },
+                    { value: '13', text: 'Longleaf / slash pine group' },
+                    { value: '14', text: 'Other eastern softwoods group' },
+                    { value: '15', text: 'Spruce / fir group' },
+                    { value: '16', text: 'White / red / jack pine group' },
+                    { value: '17', text: 'not sure, very few trees (ie, nonstocked)' },
+                    { value: '18', text: 'predominantly hardwood species, type not known' },
+                    { value: '19', text: 'predominantly softwood species, type not known' },
+                    { value: '20', text: 'Unknown' }
+                ]
+            };
+
+            // Function to generate forest type select dropdown based on user input for region
+            function createForestTypeDropdown(region) {
+                const select = document.getElementById('forestTypeGroup');
+                select.innerHTML = ''; // Clear existing options
+
+                if (forestTypeOptions[region]) {
+                    // console.log(region)
+                    forestTypeOptions[region].forEach(optionData => {
+                        const option = document.createElement('option');
+                        option.value = optionData.value; // Assign value directly
+                        option.textContent = optionData.text;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No options available for this region';
+                    select.appendChild(option);
+                }
+            }
+
+            const regionInput = document.getElementById('region');
+            regionInput.addEventListener('change', (event) => {
+                const region = event.target.value;
+                createForestTypeDropdown(region);
+            });
+        </script>
+
+        <hr>
+
+
+        <p style="text-align: center;">Disclaimer: This tool is adapted from the <a
+                href="https://docs.google.com/spreadsheets/d/1h7aIDZ8fb-G_2PArxVgje0E6tUbmYcJBPTMr7gRO-OU/edit?usp=sharing"
+                target="_blank">USDA Excel Document</a>
+            following the methods for <a href="https://www.usda.gov/oce/entity-scale-ghg-methods/chapter-5"
+                target="_blank">Manage Forest Systems</a> developed by US Forest Services.</p>
+        <p style="text-align: center;"> We are not responsible for quantifying the carbon sequestration and GHG emission
+            estimations.</p>
+
+        <p style="text-align: center;">Please click the link for detailed method on Quantifying Greenhouse Gas Sources
+            and Sinks for Managed Forest Systems.</p>
+        <footer class="custom-footer">
+            <div class="footer-container">
+                <div class="footer-text">
+                    <p class="footer-title">
+                        VERSION 1.0 Excel Workbook to Support 'Level I' Quantification Approaches for the Managed Forest
+                        Systems Chapter within the 2024 update to the USDA Publication
+                        <em>Quantifying Greenhouse Gas Fluxes in Agriculture and Forestry: Methods for Entity-Scale
+                            Inventory</em>
+                    </p>
+                    <p class="footer-subtitle">
+                        Stockmann, K.; Lister, A.; Murray, L.; Woodall, C.; Nepal, P.; Smith, J.; Gu, H.; Khatri, P.;
+                        Urbanski, S.; Riley, K.; Shaw, J. 2024.
+                        <em>USDA Greenhouse Gas Flux Entity-Scale Guidelines for Managed Forest Systems Level 1 Workbook
+                            Tool (Version 1.0)</em>
+                    </p>
+                </div>
+                <div class="footer-logos">
+                    <img src="{{ url_for('static', filename='img/usda-logo.png') }}" alt="USDA Logo"
+                        class="footer-logo">
+                    <img src="{{ url_for('static', filename='img/forest-service-logo.png') }}" alt="Forest Service Logo"
+                        class="footer-logo">
+                </div>
+            </div>
+        </footer>
+
+</body>
+
+</html>
