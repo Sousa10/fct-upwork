@@ -25,6 +25,8 @@ staticfiles/
 # Public files (if dynamically generated or not needed in version control)
 public/
 
+keys.json
+
 # Ignore IDE-specific and system files
 .vscode/
 .idea/
