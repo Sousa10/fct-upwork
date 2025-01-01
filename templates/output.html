@@ -178,11 +178,25 @@
 
             <table border="1">
                 <thead>
+                    {% if loop.index0 == 0 %}
+                    <!-- First table: Custom two-row header -->
                     <tr>
-                        {% for column in table.columns %}
-                        <th {% if loop.first %}style="text-decoration-line: underline;" {% endif %}>{{ column }}</th>
+                        <th rowspan="2" style="text-decoration-line: underline;">{{ table.columns[0] }}</th>
+                        <th colspan="{{ table.columns|length - 1 }}" style="text-align: center;">Year</th>
+                    </tr>
+                    <tr>
+                        {% for column in table.columns[1:] %}
+                        <th>{{ column.split('_')[-1] }}</th>
                         {% endfor %}
                     </tr>
+                    {% else %}
+                    <!-- Other tables: Default header structure -->
+                    <tr>
+                        {% for column in table.columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
                 </thead>
                 <tbody>
                     {% for row in table.values %}
@@ -237,10 +251,10 @@
                             {{ text | replace("From Harvest", "<span style='text-decoration-line: underline'>From
                                 Harvest</span>") | safe }}
                             {% else %}
-                                {{ text }}
+                            {{ text }}
                             {% endif %}
                         </td>
-                            {% endfor %}
+                        {% endfor %}
                         {% endif %}
                     </tr>
                     {% endfor %}
