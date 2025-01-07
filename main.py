@@ -14,6 +14,8 @@ list_tables = []
 hc_table = None
 npv1, npv2, npv3, npv4 = 0, 0, 0, 0
 
+pd.set_option('display.max_columns', None)
+
 def is_float(s):
     """Check if a string can be converted to a float."""
     s = s.replace('.', '', 1)
@@ -92,8 +94,8 @@ def submit_form():
         hc = pd.read_csv(harvest_carbon_url).iloc[0:6, 17:24]
         hc_bau = pd.read_csv(harvest_carbon_bau_url).iloc[0:6, 17:24]
         col1_col2 = hc.iloc[:, :2]
-        hc_bau_last = hc_bau.iloc[:, -1].apply(convert_to_numeric).fillna(0)
-        hc_last = hc.iloc[:, -1].apply(convert_to_numeric).fillna(0)
+        hc_bau_last = hc_bau.iloc[:, 3].apply(convert_to_numeric).fillna(0)
+        hc_last = hc.iloc[:, 3].apply(convert_to_numeric).fillna(0)
         difference = hc_bau_last - hc_last
         new_df = pd.concat([col1_col2, hc_bau_last, hc_last, difference], axis=1)
         new_df.columns = ["Timber type", "Roundwood category", "Wood Volume at BAU (CCF/Cunit)", "Wood Volume with Extended Rotation (CCF/Cunit)", "Difference Between Extended Rotation and BAU (CCF/Cunit)"]
@@ -131,15 +133,21 @@ def submit_form():
             else x
             for x in list_table_temp.iloc[3, 1:].tolist()
         ]
-        formatted_numbers = [x for x in filtered_numbers if isinstance(x, (int, float)) and x > 0]
-        eco_carbon = len(formatted_numbers) and ", ".join(map(str, filter_larger_than_last(formatted_numbers)))
+        # formatted_numbers = [x for x in filtered_numbers if isinstance(x, (int, float)) and x > 0]
+        # eco_carbon = len(formatted_numbers) and ", ".join(map(str, filter_larger_than_last(formatted_numbers)))
+
+        # Find the first non-negative value in the last row, iterating from right to left
+        last_row = list_table_temp.iloc[-1, 1:]  # Exclude the 'Attributes' column
+        last_row = last_row.str.replace(',', '')  # Remove commas
+        last_row = pd.to_numeric(last_row, errors='coerce')  # Convert to numeric, setting errors to NaN
+        eco_carbon = next((x for x in reversed(last_row) if x >= 0), None)
         
         list_tables.append(list_table_temp)
 
         # Forest Management Results
         forest_mgmt_sheet_name = "Forest%20Mgmt%20%26%20HWP%20Results"
         forest_mgmt_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet={forest_mgmt_sheet_name}"
-        forest_mgmt = pd.read_csv(forest_mgmt_url).iloc[0:19, 1:5].fillna('-')
+        forest_mgmt = pd.read_csv(forest_mgmt_url).iloc[0:19, 1:6].fillna('-')
 
         carbon_seq = forest_mgmt.iloc[0, 1]
         total_hwp = forest_mgmt.iloc[16, 1]
@@ -288,7 +296,10 @@ def output():
     for i in range(len(list_tables)):
         if list_tables[i].columns[0] == 'Attributes':
             ind_list.append(i)
-    list_tables[2].columns = [list_tables[2].columns[0], 'Value', 'Value', list_tables[2].columns[3]]
+    list_tables[2].columns = [list_tables[2].columns[0], 'Value', 'Value', list_tables[2].columns[3], 'Value']
+    # for i, table in enumerate(list_tables):
+    #     print(f"Table {i} columns: {table.columns}")
+    #     print(table.head())
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
 @app.route('/finaloutput')
