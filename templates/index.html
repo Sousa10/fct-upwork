@@ -340,7 +340,7 @@
                 <option value="11">45 </option>
                 <option value="12" selected>50 </option>
             </select>
-
+            <p style="text-align: center; font-weight: bold;"><span>Note: The tool applies default fuelwood values that are generated from sawlog and pulpwood production</span></p>
             <div class="button-container">
                 <input type="button" value="Add/Submit" onclick="addEntryAndShowTable();">
                 <input type="button" value="Clear" onclick="ClearFields();">
@@ -818,7 +818,15 @@
                 </div>
             </div>
         </footer>
-
+        <script>
+            // Add this before the existing scripts
+            window.onpageshow = function(event) {
+                if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                    window.location.reload();
+                }
+            };
+            
+        </script>
 </body>
 
 </html>

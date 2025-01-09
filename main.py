@@ -289,6 +289,14 @@ def delete_row():
             list_tables.pop(next_ind)
     return "row deleted"
 
+def safe_round(value):
+    try:
+        if isinstance(value, str):
+            value = float(value.replace('.', ''))
+        return int(round(float(value)))
+    except (ValueError, TypeError):
+        return value
+    
 @app.route('/output')
 def output():
     global list_tables
@@ -296,19 +304,73 @@ def output():
     for i in range(len(list_tables)):
         if list_tables[i].columns[0] == 'Attributes':
             ind_list.append(i)
+    
+    # Round numeric values in DataFrame
+    for col in list_tables[i].columns:
+        list_tables[i][col] = list_tables[i][col].apply(lambda x: safe_round(x) 
+            if isinstance(x, (int, float)) or (isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) 
+            else x)
     list_tables[2].columns = [list_tables[2].columns[0], 'Value', 'Value', list_tables[2].columns[3], 'Value']
     # for i, table in enumerate(list_tables):
     #     print(f"Table {i} columns: {table.columns}")
     #     print(table.head())
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
+# @app.route('/finaloutput')
+# def finaloutput():
+#     return render_template('finaloutput.html', npv1 = round(npv1,2), npv2 = round(npv2,2), npv21 = round(npv21,2), npv3=round(npv3,2), npv4=round(npv4,2), npv5 = round(npv5,2), hyb=hyb, hye=hye, eco_carbon=eco_carbon, ccf=ccf, carbon_seq=carbon_seq, total_hwp=total_hwp, total_afolu=total_afolu, benefit=benefit, area=g_area)
+
+# @app.route('/summary')
+# def summary():
+#     return render_template('summary.html', hyb=hyb, hye=hye, eco_carbon=eco_carbon, ccf=ccf, carbon_seq=carbon_seq, total_hwp=total_hwp, total_afolu=total_afolu, benefit=benefit, area=g_area)
+
 @app.route('/finaloutput')
 def finaloutput():
-    return render_template('finaloutput.html', npv1 = round(npv1,2), npv2 = round(npv2,2), npv21 = round(npv21,2), npv3=round(npv3,2), npv4=round(npv4,2), npv5 = round(npv5,2), hyb=hyb, hye=hye, eco_carbon=eco_carbon, ccf=ccf, carbon_seq=carbon_seq, total_hwp=total_hwp, total_afolu=total_afolu, benefit=benefit, area=g_area)
+    rounded_ccf = {
+        'combined': ccf['combined'],
+        'a_values': [safe_round(x) for x in ccf['a_values']],
+        'b_values': [safe_round(x) for x in ccf['b_values']],
+        'a_minus_b_values': [safe_round(x) for x in ccf['a_minus_b_values']]
+    }
+    
+    return render_template('finaloutput.html', 
+        npv1=safe_round(npv1),
+        npv2=safe_round(npv2),
+        npv21=safe_round(npv21),
+        npv3=safe_round(npv3),
+        npv4=safe_round(npv4),
+        npv5=safe_round(npv5),
+        hyb=safe_round(hyb),
+        hye=safe_round(hye),
+        eco_carbon=safe_round(eco_carbon),
+        ccf=rounded_ccf,
+        carbon_seq=safe_round(carbon_seq),
+        total_hwp=safe_round(total_hwp),
+        total_afolu=safe_round(total_afolu),
+        benefit=safe_round(benefit),
+        area=safe_round(g_area)
+    )
 
 @app.route('/summary')
 def summary():
-    return render_template('summary.html', hyb=hyb, hye=hye, eco_carbon=eco_carbon, ccf=ccf, carbon_seq=carbon_seq, total_hwp=total_hwp, total_afolu=total_afolu, benefit=benefit, area=g_area)
+    rounded_ccf = {
+        'combined': ccf['combined'],
+        'a_values': [safe_round(x) for x in ccf['a_values']],
+        'b_values': [safe_round(x) for x in ccf['b_values']],
+        'a_minus_b_values': [safe_round(x) for x in ccf['a_minus_b_values']]
+    }
+    
+    return render_template('summary.html',
+        hyb=safe_round(hyb),
+        hye=safe_round(hye),
+        eco_carbon=safe_round(eco_carbon),
+        ccf=rounded_ccf,
+        carbon_seq=safe_round(carbon_seq),
+        total_hwp=safe_round(total_hwp),
+        total_afolu=safe_round(total_afolu),
+        benefit=safe_round(benefit),
+        area=safe_round(g_area)
+    )
 
 if __name__ == '__main__':
     app.run()
