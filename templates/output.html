@@ -207,16 +207,8 @@
                     or "POST HARVEST CARBON IMPACTS" in first_cell %}
                     {% set is_header = true %}
                     {% endif %}
-                    {% if "ChiSquare Decay Function" in first_cell %}
-                    <!-- Custom header for "ChiSquare Decay Function" -->
-                    <tr>
-                        <td style="font-weight: bold; background-color: #316453; color: white; padding: 8px;">ChiSquare Decay Function</td>
-                        <td style="font-weight: bold; background-color: #316453; color: white; text-align: center;">Year 0 post-harvest</td>
-                        <td style="font-weight: bold; background-color: #316453; color: white; text-align: center;">By Year 100 Post-Harvest</td>
-                        <td style="font-weight: bold; background-color: #316453; color: white; text-align: center;">Year 0 post-harvest</td>
-                        <td style="font-weight: bold; background-color: #316453; color: white; text-align: center;">By Year 100 Post-Harvest</td>
-                    </tr>
-                    {% elif is_header %}
+                    
+                    {% if is_header %}
                         <td colspan="{{ table.columns|length }}"
                             style="font-weight: bold; background-color: #22453a; color: white; padding: 8px;">
                             {{ first_cell }}

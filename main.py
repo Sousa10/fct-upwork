@@ -301,19 +301,67 @@ def safe_round(value):
 def output():
     global list_tables
     ind_list = []
-    for i in range(len(list_tables)):
-        if list_tables[i].columns[0] == 'Attributes':
-            ind_list.append(i)
+    new_tables = []  # To hold the modified tables
     
-    # Round numeric values in DataFrame
-    for col in list_tables[i].columns:
-        list_tables[i][col] = list_tables[i][col].apply(lambda x: safe_round(x) 
-            if isinstance(x, (int, float)) or (isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) 
-            else x)
-    list_tables[2].columns = [list_tables[2].columns[0], 'Value', 'Value', list_tables[2].columns[3], 'Value']
-    # for i, table in enumerate(list_tables):
-    #     print(f"Table {i} columns: {table.columns}")
-    #     print(table.head())
+    for i in range(len(list_tables)):
+        table = list_tables[i]
+        
+        # Round numeric values in the DataFrame
+        for col in table.columns:
+            table[col] = table[col].apply(
+                lambda x: safe_round(x) if isinstance(x, (int, float)) or (
+                    isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+        
+        # Split the table containing "POST HARVEST CARBON IMPACTS"
+        if "ECOSYSTEM CARBON IMPACTS" in str(table.columns[0]):
+            split_index = table[table[table.columns[0]] == "POST HARVEST CARBON IMPACTS"].index
+            if not split_index.empty:
+                split_index = split_index[0]  # Get the first occurrence
+                
+                # Split the table into two parts
+                table1 = table.iloc[:split_index]  # Before "POST HARVEST CARBON IMPACTS"
+                table2 = table.iloc[split_index:]  # From "POST HARVEST CARBON IMPACTS"
+                
+                # Add a new header row for the second table
+                table2.reset_index(drop=True, inplace=True)
+                table2.loc[0] = table2.columns  # Promote column names as a new header row
+                table2.columns = ['Attributes', 'Year 0 post-harvest', 'By Year 100 Post-Harvest',
+                                  'Year 0 post-harvest', 'By Year 100 Post-Harvest']  # Rename columns
+                table2 = table2.iloc[1:]  # Drop the original header row
+
+                # Add the split tables to the new list
+                new_tables.append(table1)
+                new_tables.append(table2)
+            else:
+                new_tables.append(table)
+        else:
+            new_tables.append(table)
+    
+    # Update the global list_tables with the modified list
+    list_tables = new_tables
+
+     # Get original column names
+    temp_df = list_tables[2].copy()
+    original_cols = temp_df.columns.tolist()
+    
+    # Create new column names, preserving original first and fourth columns
+    new_cols = [
+        original_cols[0],  # First column (unchanged)
+        'Value',           # Second column
+        'Value',           # Third column
+        original_cols[3],  # Fourth column (unchanged)
+        'Value'            # Fifth column (to be dropped)
+    ]
+    
+    # Set new column names
+    temp_df.columns = new_cols
+    
+    # Drop only the last column
+    temp_df = temp_df.iloc[:, :-1]
+    
+    # Update the table
+    list_tables[2] = temp_df
+
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
 # @app.route('/finaloutput')
