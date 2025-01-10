@@ -176,24 +176,30 @@
             <div class="output-title">Output {{ output_count }}</div>
             {% endif %}
 
-            <table border="1">
+            <table border="1" style="table-layout: fixed; width: 100%;">
+                <colgroup>
+                    <col style="width: 30%;"> <!-- Wider Attributes column -->
+                    {% for _ in table.columns[1:] %}
+                    <col style="width: {{ 70 // (table.columns|length - 1) }}%;"> <!-- Distribute remaining width -->
+                    {% endfor %}
+                </colgroup>
                 <thead>
                     {% if loop.index0 == 0 %}
                     <!-- First table: Custom two-row header -->
                     <tr>
-                        <th rowspan="2" style="text-decoration-line: underline;">{{ table.columns[0] }}</th>
+                        <th rowspan="2" style="text-align: center; text-decoration-line: underline;">{{ table.columns[0] }}</th>
                         <th colspan="{{ table.columns|length - 1 }}" style="text-align: center;">Year</th>
                     </tr>
                     <tr>
                         {% for column in table.columns[1:] %}
-                        <th>{{ column.split('_')[-1] }}</th>
+                        <th style="text-align: center;">{{ column.split('_')[-1] }}</th>
                         {% endfor %}
                     </tr>
                     {% else %}
                     <!-- Other tables: Default header structure -->
                     <tr>
                         {% for column in table.columns %}
-                        <th>{{ column }}</th>
+                        <th style="text-align: center;">{{ column }}</th>
                         {% endfor %}
                     </tr>
                     {% endif %}
@@ -210,12 +216,12 @@
                     
                     {% if is_header %}
                         <td colspan="{{ table.columns|length }}"
-                            style="font-weight: bold; background-color: #22453a; color: white; padding: 8px;">
+                            style="text-align: center; font-weight: bold; background-color: #22453a; color: white; padding: 8px;">
                             {{ first_cell }}
                         </td>
                         {% else %}
                         {% for value in row %}
-                        <td>
+                        <td style="{% if loop.index0 == 0 %}text-align: left;{% else %}text-align: center;{% endif %}">
                             {% set text = value | string %}
                             {% if "Ecosystem Carbon STOCKS (t CO2eq)" in text %}
                             {{ text | replace("Ecosystem Carbon STOCKS (t CO2eq)", "<span

@@ -348,35 +348,35 @@
     <table>
         <thead>
             <tr>
-                <th>Metric</th>
-                <th>Value</th>
+                <th style="text-align: center;">Metric</th>
+                <th style="text-align: center;">Value</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Net Present Value (NPV) of forestry activities without extended rotation.</td>
-                <td id="npv1">{{ npv1 }}</td>
+                <td style="text-align: center;" id="npv1">{{ npv1 }}</td>
             </tr>
             <tr>
                 <td>NPV of forestry activities after extending rotation without carbon payments.</td>
-                <td id="npv2">{{ npv2 }}</td>
+                <td style="text-align: center;" id="npv2">{{ npv2 }}</td>
             </tr>
             <tr>
                 <td>Economic loss of extending rotation for carbon management without carbon payment,</td>
-                <td id="npv21">{{ npv21 }}</td>
+                <td style="text-align: center;" id="npv21">{{ npv21 }}</td>
             </tr>
             <tr>
                 <td>Revenue for carbon payment for enrolling into a carbon management program with extended
                     rotation,</td>
-                <td id="npv3">{{ npv3 }}</td>
+                <td style="text-align: center;" id="npv3">{{ npv3 }}</td>
             </tr>
             <tr>
                 <td>NPV of forestry activities after extending rotation with carbon payments.</td>
-                <td id="npv4">{{ npv4 }}</td>
+                <td style="text-align: center;" id="npv4">{{ npv4 }}</td>
             </tr>
             <tr>
                 <td>Economic loss/benefit of extending rotation for carbon management with carbon payment,</td>
-                <td id="npv5">{{ npv5 }}</td>
+                <td style="text-align: center;" id="npv5">{{ npv5 }}</td>
             </tr>
         </tbody>
     </table>
@@ -386,64 +386,64 @@
     <table border="1" id="summary_table">
         <thead>
             <tr>
-                <th>Item</th>
-                <th>Values</th>
+                <th style="text-align: center;">Item</th>
+                <th style="text-align: center;">Values</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Years from now will you harvest under a business as usual scenario</td>
-                <td>{{ hyb }}</td>
+                <td style="text-align: center;">{{ hyb }}</td>
             </tr>
             <tr>
                 <td>Harvest Year after Extended Rotation</td>
-                <td>{{ hye }}
+                <td style="text-align: center;">{{ hye }}
                 </td>
             </tr>
             <tr>
                 <td>NET Ecosystem Carbon Sequestration from adopting the planned activity (cumulative) ( t CO2eq).
                     (additional sequestration as compared to the BAU scenario</td>
-                <td>{{ eco_carbon }}</td>
+                <td style="text-align: center;">{{ eco_carbon }}</td>
             </tr>
             {% for value in ccf.combined %}
                 <tr>
                     <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator (BAU) ‘ sheet</td>
-                    <td>{{ ccf.a_values[loop.index0] }}</td>
+                    <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
                 </tr>
                 {% endfor %}
                 {% for value in ccf.combined %}
                 <tr>
                     <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator ‘ sheet</td>
-                    <td>{{ ccf.b_values[loop.index0] }}</td>
+                    <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
                 </tr>
                 {% endfor %}
                 {% for value in ccf.combined %}
                 <tr>
                     <td>{{ value }} - Difference</td>
-                    <td>{{ ccf.a_minus_b_values[loop.index0] }}</td>
+                    <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
                 </tr>
                 {% endfor %}
             <tr>
                 <td>Carbon sequestration in living and dead carbon pools (not soil) (t CO2eq)</td>
-                <td>{{ carbon_seq }}</td>
+                <td style="text-align: center;">{{ carbon_seq }}</td>
             </tr>
             <tr>
                 <td>TOTAL HWP Biogenic Carbon Stored from Harvest (t CO2eq)</td>
-                <td>{{ total_hwp }}</td>
+                <td style="text-align: center;">{{ total_hwp }}</td>
             </tr>
             <tr>
                 <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
                     CO2eq).</td>
-                <td>{{ total_afolu }}</td>
+                <td style="text-align: center;">{{ total_afolu }}</td>
             </tr>
             <tr>
                 <td>Benefit from Extending Rotation (i.e., the difference between BAU and Planned Activity Scenario
                     results) (t CO2eq). )</td>
-                <td>{{ benefit }}</td>
+                <td style="text-align: center;">{{ benefit }}</td>
             </tr>
             <tr>
                 <td>Area subject to management activity </td>
-                <td>{{ area }}</td>
+                <td style="text-align: center;">{{ area }}</td>
             </tr>
         </tbody>
     </table>
