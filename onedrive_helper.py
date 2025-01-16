@@ -1,0 +1,58 @@
+import msal
+import requests
+from config import AZURE_SETTINGS
+
+class OneDriveHelper:
+    def __init__(self):
+        self.app = msal.PublicClientApplication(
+            AZURE_SETTINGS['client_id'],
+            authority=AZURE_SETTINGS['authority'],
+            token_cache=msal.SerializableTokenCache(),
+            # client_credential=AZURE_SETTINGS['client_secret']
+        )
+        self.access_token = self._get_token()
+
+    def _get_token(self):
+        result = self.app.acquire_token_interactive(AZURE_SETTINGS['scopes'])
+        if not result:
+            result = self.app.acquire_token_for_client(scopes=AZURE_SETTINGS['scopes'])
+        if 'access_token' in result:
+            return result['access_token']
+        else:
+            raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
+
+    def update_excel(self, file_id, worksheet_name, range_address, values):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        data = {
+            'values': values
+        }
+        # print(f"Endpoint: {endpoint}")
+        # print(f"Payload: {data}")
+        response = requests.patch(endpoint, headers=headers, json=data)
+        # print(f"Response: {response.status_code}, {response.text}")
+        response.raise_for_status()
+        return response.json()
+
+    def read_excel(self, file_id, worksheet_name, range_address):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
+        headers = {
+            'Authorization': f'Bearer {self.access_token}'
+        }
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def list_drives(self):
+        endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        try:
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error: {e.response.text}")
+            raise

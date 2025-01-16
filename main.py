@@ -4,6 +4,9 @@ import json
 import gspread
 from flask import Flask, render_template, request, jsonify
 from google.oauth2 import service_account
+from onedrive_helper import OneDriveHelper
+from config import EXCEL_FILE_ID
+import requests
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -53,24 +56,31 @@ def submit_form():
     form_df = pd.DataFrame([form_data])
     df = form_df.tail(1)
 
-    document_id = "17l0BupZ9jf5mORvW-1Ak7qooLqKs8IgsRfmTiLIeI4o"
-    tab_name = "UserDataEntry"
-    full_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet={tab_name}"
+    try:
+        # Initialize OneDrive helper
+        onedrive = OneDriveHelper()
+        onedrive.list_drives()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # document_id = "17l0BupZ9jf5mORvW-1Ak7qooLqKs8IgsRfmTiLIeI4o"
+    # tab_name = "UserDataEntry"
+    # full_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet={tab_name}"
     
-    harvest_carbon_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=HarvestCarbonCalculator"
-    harvest_carbon_bau_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=Harvest%20Carbon%20Calculator%20(BAU)"
+    # harvest_carbon_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=HarvestCarbonCalculator"
+    # harvest_carbon_bau_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=Harvest%20Carbon%20Calculator%20(BAU)"
 
     # Load Google Sheets API credentials
-    with open('keys.json') as file:
-        file_content = json.load(file, strict=False)
+    # with open('keys.json') as file:
+    #     file_content = json.load(file, strict=False)
 
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = service_account.Credentials.from_service_account_info(file_content, scopes=scope)
-    gc = gspread.authorize(creds)
-    sh = gc.open_by_key(document_id)
-    worksheet = sh.get_worksheet(3)
+    # scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    # creds = service_account.Credentials.from_service_account_info(file_content, scopes=scope)
+    # gc = gspread.authorize(creds)
+    # sh = gc.open_by_key(document_id)
+    # worksheet = sh.get_worksheet(3)
 
-    conversions = pd.read_csv(f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=Smith_TableD6").iloc[:38, :13]
+    # conversions = pd.read_csv(f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet=Smith_TableD6").iloc[:38, :13]
     global hyb, hye, eco_carbon, ccf, carbon_seq, total_hwp, total_afolu, benefit, g_area
 
     for i in range(df.shape[0]):
@@ -84,15 +94,39 @@ def submit_form():
         hyb = df.iloc[i]['harvestYearsBusiness']
         hye = df.iloc[i]['harvestYearsER']
 
-        temp = [int(area), region, grp, origin, age, int(hyb), int(hye)]
-        for i in range(len(temp)):
-            cell = worksheet.acell(f'C{i+3}')
-            cell.value = temp[i]
-            worksheet.update_cells([cell])
+        # Update UserDataEntry sheet
+        values = [[int(area)], [region], [grp], [origin], [age], [int(hyb)], [int(hye)]]
+        try:
+            onedrive.update_excel(
+                EXCEL_FILE_ID,
+                'UserDataEntry',
+                'C3:C9',
+                values
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e.response.text}")  # Log response details
+            return jsonify({"error": str(e)}), 500
+
+        # temp = [int(area), region, grp, origin, age, int(hyb), int(hye)]
+        # for i in range(len(temp)):
+        #     cell = worksheet.acell(f'C{i+3}')
+        #     cell.value = temp[i]
+        #     worksheet.update_cells([cell])
+
+        # Read other sheets using Microsoft Graph API
+        try:
+            harvest_carbon = onedrive.read_excel(EXCEL_FILE_ID, 'HarvestCarbonCalculator', 'A1:Z100')
+            # print(harvest_carbon)
+            harvest_carbon_bau = onedrive.read_excel(EXCEL_FILE_ID, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
         # Harvest Carbon
-        hc = pd.read_csv(harvest_carbon_url).iloc[0:6, 17:24]
-        hc_bau = pd.read_csv(harvest_carbon_bau_url).iloc[0:6, 17:24]
+
+        # hc = pd.read_csv(harvest_carbon_url).iloc[0:6, 17:24]
+        # hc_bau = pd.read_csv(harvest_carbon_bau_url).iloc[0:6, 17:24]
+        hc = pd.DataFrame(harvest_carbon['values']).iloc[0:6, 17:24]
+        hc_bau = pd.DataFrame(harvest_carbon_bau['values']).iloc[0:6, 17:24]
         col1_col2 = hc.iloc[:, :2]
         hc_bau_last = hc_bau.iloc[:, 3].apply(convert_to_numeric).fillna(0)
         hc_last = hc.iloc[:, 3].apply(convert_to_numeric).fillna(0)
@@ -115,7 +149,9 @@ def submit_form():
         }
         list_tables.append(new_df)
 
-        list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
+        # list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
+        list_table_temp = onedrive.read_excel(EXCEL_FILE_ID, 'UserDataEntry', 'A1:Z100')['values']
+        list_table_temp = pd.DataFrame(list_table_temp).iloc[6:12, 6:18]
         list_table_temp.columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
         list_table_temp.Attributes = [' '.join(i.split('\n')) for i in list_table_temp.Attributes] 
         list_table_temp = list_table_temp.iloc[1:, :].fillna(0)
@@ -145,9 +181,9 @@ def submit_form():
         list_tables.append(list_table_temp)
 
         # Forest Management Results
-        forest_mgmt_sheet_name = "Forest%20Mgmt%20%26%20HWP%20Results"
-        forest_mgmt_url = f"https://docs.google.com/spreadsheets/d/{document_id}/gviz/tq?tqx=out:csv&sheet={forest_mgmt_sheet_name}"
-        forest_mgmt = pd.read_csv(forest_mgmt_url).iloc[0:19, 1:6].fillna('-')
+        forest_mgmt_sheet_name = "Forest Mgmt & HWP Results"
+        forest_mgmt = onedrive.read_excel(EXCEL_FILE_ID, forest_mgmt_sheet_name, 'A1:Z100')['values']
+        forest_mgmt = pd.DataFrame(forest_mgmt).iloc[0:19, 1:6].fillna('-')
 
         carbon_seq = forest_mgmt.iloc[0, 1]
         total_hwp = forest_mgmt.iloc[16, 1]
@@ -361,6 +397,7 @@ def output():
     
     # Update the table
     list_tables[2] = temp_df
+    print(list_tables)
 
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
