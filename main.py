@@ -393,7 +393,7 @@ def output():
     temp_df.columns = new_cols
     
     # Drop only the last column
-    temp_df = temp_df.iloc[:, :-1]
+    temp_df = temp_df.iloc[:, [0, 1, 3]]
     
     # Update the table
     list_tables[2] = temp_df
