@@ -7,10 +7,14 @@ from google.oauth2 import service_account
 from onedrive_helper import OneDriveHelper
 from config import EXCEL_FILE_ID
 import requests
+import logging
 
 # Initialize Flask app
 app = Flask(__name__)
 application = app
+
+# Initialize logging
+logging.basicConfig(level=logging.DEBUG)
 
 # # Initialize global variables
 list_tables = []
@@ -59,8 +63,9 @@ def submit_form():
     try:
         # Initialize OneDrive helper
         onedrive = OneDriveHelper()
-        onedrive.list_drives()
+        # onedrive.list_drives()
     except Exception as e:
+        logging.error(f"OneDrive initialization error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
     # document_id = "17l0BupZ9jf5mORvW-1Ak7qooLqKs8IgsRfmTiLIeI4o"
@@ -104,7 +109,14 @@ def submit_form():
                 values
             )
         except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e.response.text}")  # Log response details
+            logging.error(f"Request failed: {e.response.text}")  # Log response details
+            return jsonify({"error": str(e)}), 500
+        
+        try:
+            recalculation_result = onedrive.recalculate_workbook(EXCEL_FILE_ID)
+            logging.info(f"Recalculation result: {recalculation_result}")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Recalculation failed: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
         # temp = [int(area), region, grp, origin, age, int(hyb), int(hye)]
@@ -114,19 +126,40 @@ def submit_form():
         #     worksheet.update_cells([cell])
 
         # Read other sheets using Microsoft Graph API
+        # Read other sheets using Microsoft Graph API with specified range
         try:
-            harvest_carbon = onedrive.read_excel(EXCEL_FILE_ID, 'HarvestCarbonCalculator', 'A1:Z100')
-            # print(harvest_carbon)
-            harvest_carbon_bau = onedrive.read_excel(EXCEL_FILE_ID, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
+            harvest_carbon_response = onedrive.read_excel(EXCEL_FILE_ID, 'HarvestCarbonCalculator', 'A1:Z100')
+            harvest_carbon_bau_response = onedrive.read_excel(EXCEL_FILE_ID, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
+            
+            # Extract values from the response
+            harvest_carbon = harvest_carbon_response.get('values')
+            harvest_carbon_bau = harvest_carbon_bau_response.get('values')
+            
+            # Debug print to check the content of values
+            # print(f"harvest_carbon values: {harvest_carbon}")
+            # print(f"harvest_carbon_bau values: {harvest_carbon_bau}")
+            
+            if harvest_carbon is None or harvest_carbon_bau is None:
+                raise ValueError("No data found in the specified range")
+            
         except Exception as e:
+            logging.error(f"Error reading Excel data: {str(e)}")
             return jsonify({"error": str(e)}), 500
-
-        # Harvest Carbon
+            # Harvest Carbon
 
         # hc = pd.read_csv(harvest_carbon_url).iloc[0:6, 17:24]
         # hc_bau = pd.read_csv(harvest_carbon_bau_url).iloc[0:6, 17:24]
-        hc = pd.DataFrame(harvest_carbon['values']).iloc[0:6, 17:24]
-        hc_bau = pd.DataFrame(harvest_carbon_bau['values']).iloc[0:6, 17:24]
+        # Debug print to check the content of harvest_carbon and harvest_carbon_bau
+        # print(f"harvest_carbon content: {harvest_carbon}")
+        # print(f"harvest_carbon_bau content: {harvest_carbon_bau}")
+
+        # Ensure harvest_carbon and harvest_carbon_bau are valid inputs for pd.DataFrame
+        try:
+            hc = pd.DataFrame(harvest_carbon).iloc[0:6, 17:24]
+            hc_bau = pd.DataFrame(harvest_carbon_bau).iloc[0:6, 17:24]
+        except Exception as e:
+            print(f"Error creating DataFrame: {e}")
+            return jsonify({"error": "Invalid data format for harvest_carbon or harvest_carbon_bau"}), 400
         col1_col2 = hc.iloc[:, :2]
         hc_bau_last = hc_bau.iloc[:, 3].apply(convert_to_numeric).fillna(0)
         hc_last = hc.iloc[:, 3].apply(convert_to_numeric).fillna(0)
@@ -150,7 +183,13 @@ def submit_form():
         list_tables.append(new_df)
 
         # list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
-        list_table_temp = onedrive.read_excel(EXCEL_FILE_ID, 'UserDataEntry', 'A1:Z100')['values']
+        try:
+            list_table_temp = onedrive.read_excel(EXCEL_FILE_ID, 'UserDataEntry', 'A1:Z100')['values']
+            logging.debug(f"UserDataEntry Data: {list_table_temp}")
+        except Exception as e:
+            logging.error(f"Error reading UserDataEntry data: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+
         list_table_temp = pd.DataFrame(list_table_temp).iloc[6:12, 6:18]
         list_table_temp.columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
         list_table_temp.Attributes = [' '.join(i.split('\n')) for i in list_table_temp.Attributes] 
@@ -182,7 +221,13 @@ def submit_form():
 
         # Forest Management Results
         forest_mgmt_sheet_name = "Forest Mgmt & HWP Results"
-        forest_mgmt = onedrive.read_excel(EXCEL_FILE_ID, forest_mgmt_sheet_name, 'A1:Z100')['values']
+        try:
+            forest_mgmt = onedrive.read_excel(EXCEL_FILE_ID, forest_mgmt_sheet_name, 'A1:Z100')['values']
+            logging.debug(f"Forest Mgmt Data: {forest_mgmt}")
+        except Exception as e:
+            logging.error(f"Error reading Forest Mgmt data: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+
         forest_mgmt = pd.DataFrame(forest_mgmt).iloc[0:19, 1:6].fillna('-')
 
         carbon_seq = forest_mgmt.iloc[0, 1]
@@ -191,7 +236,7 @@ def submit_form():
         benefit = forest_mgmt.iloc[18, 1]
         list_tables.append(forest_mgmt)
 
-    return jsonify({"status": "processing_complete"})
+    return jsonify({"status": "processing_complete", "recalculation_result": recalculation_result})
 
 @app.route('/calculate_factor', methods=['POST'])
 def calculate_factor():

@@ -56,3 +56,19 @@ class OneDriveHelper:
         except requests.exceptions.RequestException as e:
             print(f"Error: {e.response.text}")
             raise
+    
+    def recalculate_workbook(self, file_id):
+        """
+        Triggers recalculation for the entire workbook.
+        """
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/application/calculate"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        data = {"calculationType": "Full"}  # Options: Full, Recalculate
+        response = requests.post(endpoint, headers=headers, json=data)
+        # Handle 204 response
+        if response.status_code == 204:
+            return {"status": "Success", "message": "Recalculation completed with no response body."}
+        
+        # Handle other errors
+        response.raise_for_status()
+        return response.json()

@@ -172,7 +172,7 @@
                 {% endif %}
             </h3>
 
-            {% if table.columns[0].lower() == 'index' %}
+            {% if table.columns[0] is string and table.columns[0].lower() == 'index' %}
             <div class="output-title">Output {{ output_count }}</div>
             {% endif %}
 
