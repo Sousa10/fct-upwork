@@ -23,6 +23,7 @@ class OneDriveHelper:
 
     def update_excel(self, file_id, worksheet_name, range_address, values):
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
+        
         headers = {
             'Authorization': f'Bearer {self.access_token}',
             'Content-Type': 'application/json'
@@ -72,3 +73,29 @@ class OneDriveHelper:
         # Handle other errors
         response.raise_for_status()
         return response.json()
+    
+    def list_files(self):
+        endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        try:
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()
+            items = response.json().get("value", [])
+            files = [item for item in items if "file" in item]
+            return files
+        except requests.exceptions.RequestException as e:
+            print(f"Error: {e.response.text}")
+            raise
+    
+    def get_file_metadata(self, file_path):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+
+        try:
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            return response.json()  # Return the file metadata as a dictionary
+        except requests.exceptions.RequestException as e:
+            print(f"Error: {e.response.text if e.response else str(e)}")
+            raise
+

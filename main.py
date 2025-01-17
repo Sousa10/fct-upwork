@@ -14,7 +14,7 @@ app = Flask(__name__)
 application = app
 
 # Initialize logging
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 # # Initialize global variables
 list_tables = []
@@ -63,7 +63,7 @@ def submit_form():
     try:
         # Initialize OneDrive helper
         onedrive = OneDriveHelper()
-        # onedrive.list_drives()
+        # print(onedrive.get_file_metadata("Copy of Excel Workbook V1.1 - Copy.xlsx"))
     except Exception as e:
         logging.error(f"OneDrive initialization error: {str(e)}")
         return jsonify({"error": str(e)}), 500
