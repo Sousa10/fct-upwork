@@ -5,7 +5,7 @@ import gspread
 from flask import Flask, render_template, request, jsonify
 from google.oauth2 import service_account
 from onedrive_helper import OneDriveHelper
-from config import EXCEL_FILE_ID
+from config import EXCEL_FILE_ID, FILE_PATH
 import requests
 import logging
 
@@ -64,6 +64,9 @@ def submit_form():
         # Initialize OneDrive helper
         onedrive = OneDriveHelper()
         # print(onedrive.get_file_metadata("Copy of Excel Workbook V1.1 - Copy.xlsx"))
+        root_files = onedrive.list_root_files()
+        # for item in root_files.get('value', []):
+        #     print(item['name'], item['id'], item.get('parentReference', {}).get('path', 'Unknown Path'))
     except Exception as e:
         logging.error(f"OneDrive initialization error: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -103,8 +106,9 @@ def submit_form():
         values = [[int(area)], [region], [grp], [origin], [age], [int(hyb)], [int(hye)]]
         try:
             onedrive.update_excel(
-                EXCEL_FILE_ID,
-                'UserDataEntry',
+                FILE_PATH,
+                # EXCEL_FILE_ID,
+                'User Data Entry',
                 'C3:C9',
                 values
             )
@@ -112,12 +116,12 @@ def submit_form():
             logging.error(f"Request failed: {e.response.text}")  # Log response details
             return jsonify({"error": str(e)}), 500
         
-        try:
-            recalculation_result = onedrive.recalculate_workbook(EXCEL_FILE_ID)
-            logging.info(f"Recalculation result: {recalculation_result}")
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Recalculation failed: {str(e)}")
-            return jsonify({"error": str(e)}), 500
+        # try:
+        #     recalculation_result = onedrive.recalculate_workbook(EXCEL_FILE_ID)
+        #     logging.info(f"Recalculation result: {recalculation_result}")
+        # except requests.exceptions.RequestException as e:
+        #     logging.error(f"Recalculation failed: {str(e)}")
+        #     return jsonify({"error": str(e)}), 500
 
         # temp = [int(area), region, grp, origin, age, int(hyb), int(hye)]
         # for i in range(len(temp)):
@@ -128,8 +132,8 @@ def submit_form():
         # Read other sheets using Microsoft Graph API
         # Read other sheets using Microsoft Graph API with specified range
         try:
-            harvest_carbon_response = onedrive.read_excel(EXCEL_FILE_ID, 'HarvestCarbonCalculator', 'A1:Z100')
-            harvest_carbon_bau_response = onedrive.read_excel(EXCEL_FILE_ID, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
+            harvest_carbon_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator', 'A1:Z100')
+            harvest_carbon_bau_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
             
             # Extract values from the response
             harvest_carbon = harvest_carbon_response.get('values')
@@ -184,7 +188,7 @@ def submit_form():
 
         # list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
         try:
-            list_table_temp = onedrive.read_excel(EXCEL_FILE_ID, 'UserDataEntry', 'A1:Z100')['values']
+            list_table_temp = onedrive.read_excel(FILE_PATH, 'User Data Entry', 'A1:Z100')['values']
             logging.debug(f"UserDataEntry Data: {list_table_temp}")
         except Exception as e:
             logging.error(f"Error reading UserDataEntry data: {str(e)}")
@@ -192,9 +196,11 @@ def submit_form():
 
         list_table_temp = pd.DataFrame(list_table_temp).iloc[6:12, 6:18]
         list_table_temp.columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
-        list_table_temp.Attributes = [' '.join(i.split('\n')) for i in list_table_temp.Attributes] 
+        list_table_temp.Attributes = [' '.join(i.split('\n')) for i in list_table_temp.Attributes]
         list_table_temp = list_table_temp.iloc[1:, :].fillna(0)
         list_table_temp.reset_index(drop=True, inplace=True)
+
+        print(list_table_temp)
 
         ind = len(list_table_temp.columns)
         for j in range(len(list_table_temp.columns) - 1, -1, -1):
@@ -212,7 +218,8 @@ def submit_form():
         # eco_carbon = len(formatted_numbers) and ", ".join(map(str, filter_larger_than_last(formatted_numbers)))
 
         # Find the first non-negative value in the last row, iterating from right to left
-        last_row = list_table_temp.iloc[-1, 1:]  # Exclude the 'Attributes' column
+        last_row = list_table_temp.iloc[-1, 1:].astype(str).reset_index(drop=True)  # Exclude the 'Attributes' column
+        # print(f"Last row: {last_row}")
         last_row = last_row.str.replace(',', '')  # Remove commas
         last_row = pd.to_numeric(last_row, errors='coerce')  # Convert to numeric, setting errors to NaN
         eco_carbon = next((x for x in reversed(last_row) if x >= 0), None)
@@ -220,9 +227,9 @@ def submit_form():
         list_tables.append(list_table_temp)
 
         # Forest Management Results
-        forest_mgmt_sheet_name = "Forest Mgmt & HWP Results"
+        forest_mgmt_sheet_name = "Forest%20Mgmt%20&%20HWP%20Results"
         try:
-            forest_mgmt = onedrive.read_excel(EXCEL_FILE_ID, forest_mgmt_sheet_name, 'A1:Z100')['values']
+            forest_mgmt = onedrive.read_excel(FILE_PATH, forest_mgmt_sheet_name, 'A1:Z100')['values']
             logging.debug(f"Forest Mgmt Data: {forest_mgmt}")
         except Exception as e:
             logging.error(f"Error reading Forest Mgmt data: {str(e)}")
@@ -236,7 +243,7 @@ def submit_form():
         benefit = forest_mgmt.iloc[18, 1]
         list_tables.append(forest_mgmt)
 
-    return jsonify({"status": "processing_complete", "recalculation_result": recalculation_result})
+    return jsonify({"status": "processing_complete"})
 
 @app.route('/calculate_factor', methods=['POST'])
 def calculate_factor():
@@ -442,7 +449,7 @@ def output():
     
     # Update the table
     list_tables[2] = temp_df
-    print(list_tables)
+    # print(list_tables)
 
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 

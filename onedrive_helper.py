@@ -21,8 +21,8 @@ class OneDriveHelper:
         else:
             raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
 
-    def update_excel(self, file_id, worksheet_name, range_address, values):
-        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
+    def update_excel(self, file_path, worksheet_name, range_address, values):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         
         headers = {
             'Authorization': f'Bearer {self.access_token}',
@@ -31,15 +31,15 @@ class OneDriveHelper:
         data = {
             'values': values
         }
-        # print(f"Endpoint: {endpoint}")
+        print(f"Endpoint: {endpoint}")
         # print(f"Payload: {data}")
         response = requests.patch(endpoint, headers=headers, json=data)
         # print(f"Response: {response.status_code}, {response.text}")
         response.raise_for_status()
         return response.json()
 
-    def read_excel(self, file_id, worksheet_name, range_address):
-        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
+    def read_excel(self, file_path, worksheet_name, range_address):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         headers = {
             'Authorization': f'Bearer {self.access_token}'
         }
@@ -74,18 +74,29 @@ class OneDriveHelper:
         response.raise_for_status()
         return response.json()
     
-    def list_files(self):
+    def list_root_files(self):
         endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children"
         headers = {'Authorization': f'Bearer {self.access_token}'}
-        try:
-            response = requests.get(endpoint, headers=headers)
-            response.raise_for_status()
-            items = response.json().get("value", [])
-            files = [item for item in items if "file" in item]
-            return files
-        except requests.exceptions.RequestException as e:
-            print(f"Error: {e.response.text}")
-            raise
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def list_files(self, folder_path=""):
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{folder_path}:/children"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+        return response.json()
+        # try:
+        #     response = requests.get(endpoint, headers=headers)
+        #     response.raise_for_status()
+        #     items = response.json().get("value", [])
+        #     files = [item for item in items if "file" in item]
+        #     return files
+        # except requests.exceptions.RequestException as e:
+        #     print(f"Error: {e.response.text}")
+        #     raise
     
     def get_file_metadata(self, file_path):
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/"
