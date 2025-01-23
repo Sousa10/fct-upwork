@@ -249,6 +249,7 @@ def submit_form():
             
             # Convert the data into a DataFrame
             forest_mgmt = pd.DataFrame(forest_mgmt_response)
+            # print(forest_mgmt)
             
             # Inspect the shape and columns of the DataFrame
             # print(forest_mgmt)  # Debugging: Check the extracted data
@@ -262,7 +263,7 @@ def submit_form():
                 raise ValueError(f"Expected at least 19 rows, but got {forest_mgmt.shape[0]}")
             
             # Trim the DataFrame to the appropriate range
-            forest_mgmt = forest_mgmt.iloc[0:19, 1:6].fillna('-')
+            forest_mgmt = forest_mgmt.iloc[0:22, 1:6].fillna('-')
             # print(forest_mgmt)
             
             # Extract relevant values
@@ -432,7 +433,7 @@ def output():
         table = list_tables[i]
 
         print(f"Table columns: {table.columns.tolist()}")
-        print(f"Table first column values: {table[table.columns[0]].tolist()}")
+        # print(f"Table first column values: {table[table.columns[0]].tolist()}")
         
         # Round numeric values in the DataFrame
         for col in table.columns:
