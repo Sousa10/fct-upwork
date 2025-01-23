@@ -31,7 +31,7 @@ class OneDriveHelper:
         data = {
             'values': values
         }
-        print(f"Endpoint: {endpoint}")
+        # print(f"Endpoint: {endpoint}")
         # print(f"Payload: {data}")
         response = requests.patch(endpoint, headers=headers, json=data)
         # print(f"Response: {response.status_code}, {response.text}")

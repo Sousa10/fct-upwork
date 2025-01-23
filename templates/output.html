@@ -208,7 +208,7 @@
                     {% for row in table.values %}
                     {% set is_header = false %}
                     {% set first_cell = row[0]|string %}
-                    {% if "ECOSYSTEM CARBON IMPACTS From Forest Growth" in first_cell
+                    {% if "ECOSYSTEM CARBON IMPACTS \nFrom Forest Growth" in first_cell
                     or "ECOSYSTEM CARBON IMPACTS From Harvest" in first_cell
                     or "POST HARVEST CARBON IMPACTS" in first_cell %}
                     {% set is_header = true %}

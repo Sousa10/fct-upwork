@@ -197,8 +197,8 @@ def submit_form():
         list_table_temp = pd.DataFrame(list_table_temp)
 
         # Inspect the extracted DataFrame
-        print(list_table_temp)  # Check the extracted data
-        print(list_table_temp.columns)  # See the number of columns
+        # print(list_table_temp)  # Check the extracted data
+        # print(list_table_temp.columns)  # See the number of columns
         # Update column names dynamically
         expected_columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
 
@@ -213,7 +213,7 @@ def submit_form():
         list_table_temp = list_table_temp.fillna(0)
         list_table_temp.reset_index(drop=True, inplace=True)
 
-        print(list_table_temp)
+        # print(list_table_temp)
 
         ind = len(list_table_temp.columns)
         for j in range(len(list_table_temp.columns) - 1, -1, -1):
@@ -241,20 +241,44 @@ def submit_form():
 
         # Forest Management Results
         forest_mgmt_sheet_name = "Forest%20Mgmt%20&%20HWP%20Results"
+
         try:
-            forest_mgmt = onedrive.read_excel(FILE_PATH, forest_mgmt_sheet_name, 'A1:Z100')['values']
-            logging.debug(f"Forest Mgmt Data: {forest_mgmt}")
+            # Fetch data from the OneDrive Excel sheet
+            forest_mgmt_response = onedrive.read_excel(FILE_PATH, forest_mgmt_sheet_name, 'A4:G26')['values']
+            logging.debug(f"Forest Mgmt Data: {forest_mgmt_response}")
+            
+            # Convert the data into a DataFrame
+            forest_mgmt = pd.DataFrame(forest_mgmt_response)
+            
+            # Inspect the shape and columns of the DataFrame
+            # print(forest_mgmt)  # Debugging: Check the extracted data
+            # print(forest_mgmt.shape)  # Debugging: See the dimensions
+            
+            # Dynamically adjust the range to pick the correct rows and columns
+            if forest_mgmt.shape[1] < 6:
+                raise ValueError(f"Expected at least 6 columns, but got {forest_mgmt.shape[1]}")
+            
+            if forest_mgmt.shape[0] < 19:
+                raise ValueError(f"Expected at least 19 rows, but got {forest_mgmt.shape[0]}")
+            
+            # Trim the DataFrame to the appropriate range
+            forest_mgmt = forest_mgmt.iloc[0:19, 1:6].fillna('-')
+            # print(forest_mgmt)
+            
+            # Extract relevant values
+            carbon_seq = forest_mgmt.iloc[0, 1]
+            total_hwp = forest_mgmt.iloc[16, 1]
+            total_afolu = forest_mgmt.iloc[17, 1]
+            benefit = forest_mgmt.iloc[18, 1]
+            print(f"carbon_seq: {carbon_seq}, total_hwp: {total_hwp}, total_afolu: {total_afolu}, benefit: {benefit}")
+            
+            # Append the trimmed DataFrame to the list
+            list_tables.append(forest_mgmt)
+            
         except Exception as e:
             logging.error(f"Error reading Forest Mgmt data: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
-        forest_mgmt = pd.DataFrame(forest_mgmt).iloc[0:19, 1:6].fillna('-')
-
-        carbon_seq = forest_mgmt.iloc[0, 1]
-        total_hwp = forest_mgmt.iloc[16, 1]
-        total_afolu = forest_mgmt.iloc[17, 1]
-        benefit = forest_mgmt.iloc[18, 1]
-        list_tables.append(forest_mgmt)
 
     return jsonify({"status": "processing_complete"})
 
@@ -406,6 +430,9 @@ def output():
     
     for i in range(len(list_tables)):
         table = list_tables[i]
+
+        print(f"Table columns: {table.columns.tolist()}")
+        print(f"Table first column values: {table[table.columns[0]].tolist()}")
         
         # Round numeric values in the DataFrame
         for col in table.columns:
@@ -413,11 +440,16 @@ def output():
                 lambda x: safe_round(x) if isinstance(x, (int, float)) or (
                     isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
         
+        # Debug print to check column values
+        print(f"Checking column values: {table[table.columns[1]].tolist()}")
+
         # Split the table containing "POST HARVEST CARBON IMPACTS"
-        if "ECOSYSTEM CARBON IMPACTS" in str(table.columns[0]):
+        if any("ECOSYSTEM CARBON IMPACTS" in str(val) for val in table[table.columns[1]]):
+            print(f"Checking for split condition in column: {table.columns[0]}")
             split_index = table[table[table.columns[0]] == "POST HARVEST CARBON IMPACTS"].index
             if not split_index.empty:
                 split_index = split_index[0]  # Get the first occurrence
+                print(f"Using split index: {split_index}")
                 
                 # Split the table into two parts
                 table1 = table.iloc[:split_index]  # Before "POST HARVEST CARBON IMPACTS"
@@ -440,7 +472,7 @@ def output():
     
     # Update the global list_tables with the modified list
     list_tables = new_tables
-
+    # print(list_tables)
      # Get original column names
     temp_df = list_tables[2].copy()
     original_cols = temp_df.columns.tolist()
@@ -462,7 +494,7 @@ def output():
     
     # Update the table
     list_tables[2] = temp_df
-    # print(list_tables)
+    # print(list_tables[2])
 
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
