@@ -188,16 +188,29 @@ def submit_form():
 
         # list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
         try:
-            list_table_temp = onedrive.read_excel(FILE_PATH, 'User Data Entry', 'A1:Z100')['values']
+            list_table_temp = onedrive.read_excel(FILE_PATH, 'User Data Entry', 'G9:R14')['values']
             logging.debug(f"UserDataEntry Data: {list_table_temp}")
         except Exception as e:
             logging.error(f"Error reading UserDataEntry data: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
-        list_table_temp = pd.DataFrame(list_table_temp).iloc[6:12, 6:18]
-        list_table_temp.columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
-        list_table_temp.Attributes = [' '.join(i.split('\n')) for i in list_table_temp.Attributes]
-        list_table_temp = list_table_temp.iloc[1:, :].fillna(0)
+        list_table_temp = pd.DataFrame(list_table_temp)
+
+        # Inspect the extracted DataFrame
+        print(list_table_temp)  # Check the extracted data
+        print(list_table_temp.columns)  # See the number of columns
+        # Update column names dynamically
+        expected_columns = ['Attributes', 'Year_0', 'Year_5', 'Year_10', 'Year_15', 'Year_20', 'Year_25', 'Year_30', 'Year_35', 'Year_40', 'Year_45', 'Year_50']
+
+        # Adjust column length to match the DataFrame
+        if len(list_table_temp.columns) != len(expected_columns):
+            expected_columns = expected_columns[:len(list_table_temp.columns)]
+
+        list_table_temp.columns = expected_columns
+
+        # Process attributes column and clean up
+        list_table_temp['Attributes'] = [' '.join(str(i).split('\n')) for i in list_table_temp['Attributes']]
+        list_table_temp = list_table_temp.fillna(0)
         list_table_temp.reset_index(drop=True, inplace=True)
 
         print(list_table_temp)
