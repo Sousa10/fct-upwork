@@ -250,6 +250,13 @@ def submit_form():
             # Convert the data into a DataFrame
             forest_mgmt = pd.DataFrame(forest_mgmt_response)
             # print(forest_mgmt)
+
+            # Extract relevant values
+            carbon_seq = forest_mgmt.iloc[3, 2]
+            total_hwp = forest_mgmt.iloc[20, 2]
+            total_afolu = forest_mgmt.iloc[21, 2]
+            benefit = forest_mgmt.iloc[22, 2]
+            print(f"carbon_seq: {carbon_seq}, total_hwp: {total_hwp}, total_afolu: {total_afolu}, benefit: {benefit}")
             
             # Inspect the shape and columns of the DataFrame
             # print(forest_mgmt)  # Debugging: Check the extracted data
@@ -263,15 +270,8 @@ def submit_form():
                 raise ValueError(f"Expected at least 19 rows, but got {forest_mgmt.shape[0]}")
             
             # Trim the DataFrame to the appropriate range
-            forest_mgmt = forest_mgmt.iloc[0:22, 1:6].fillna('-')
+            forest_mgmt = forest_mgmt.iloc[0:21, 1:6].fillna('-')
             # print(forest_mgmt)
-            
-            # Extract relevant values
-            carbon_seq = forest_mgmt.iloc[0, 1]
-            total_hwp = forest_mgmt.iloc[16, 1]
-            total_afolu = forest_mgmt.iloc[17, 1]
-            benefit = forest_mgmt.iloc[18, 1]
-            print(f"carbon_seq: {carbon_seq}, total_hwp: {total_hwp}, total_afolu: {total_afolu}, benefit: {benefit}")
             
             # Append the trimmed DataFrame to the list
             list_tables.append(forest_mgmt)
@@ -380,7 +380,10 @@ def calculate_factor():
     npv21 = npv2 - npv1
     npv3 = 0
     if carbon_unit == "tonne-co2eq":
-        formatted_benefit = float(benefit.replace(",", "")) if float(benefit.replace(",", "")) < 0 else 0
+        if isinstance(benefit, str):
+            formatted_benefit = float(benefit.replace(",", "")) if float(benefit.replace(",", "")) < 0 else 0
+        else:
+            formatted_benefit = benefit if benefit < 0 else 0
         npv3 = formatted_benefit * carbon_price
         print(f"formatted_benefit: {formatted_benefit}")
     else:
@@ -420,7 +423,8 @@ def safe_round(value):
         if isinstance(value, str):
             value = float(value.replace('.', ''))
         return int(round(float(value)))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as e:
+        print(f"Failed to round value: {value}, Error: {e}")
         return value
     
 @app.route('/output')
@@ -429,41 +433,44 @@ def output():
     ind_list = []
     new_tables = []  # To hold the modified tables
     
-    for i in range(len(list_tables)):
+    for i, table in enumerate(list_tables):
         table = list_tables[i]
-
-        print(f"Table columns: {table.columns.tolist()}")
+        # print(f"Processing Table {i} - Columns: {table.columns.tolist()}")
+        # print(f"Table columns: {table.columns.tolist()}")
         # print(f"Table first column values: {table[table.columns[0]].tolist()}")
         
         # Round numeric values in the DataFrame
+        split_column = None
         for col in table.columns:
             table[col] = table[col].apply(
                 lambda x: safe_round(x) if isinstance(x, (int, float)) or (
                     isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+            
+            if any("POST HARVEST CARBON IMPACTS" in str(val) for val in table[col]):
+                split_column = col
         
         # Debug print to check column values
-        print(f"Checking column values: {table[table.columns[1]].tolist()}")
+        # print(f"Checking column values: {table[table.columns[1]].tolist()}")
 
         # Split the table containing "POST HARVEST CARBON IMPACTS"
-        if any("ECOSYSTEM CARBON IMPACTS" in str(val) for val in table[table.columns[1]]):
-            print(f"Checking for split condition in column: {table.columns[0]}")
-            split_index = table[table[table.columns[0]] == "POST HARVEST CARBON IMPACTS"].index
+        if split_column:
+            split_index = table[table[split_column] == "POST HARVEST CARBON IMPACTS"].index
             if not split_index.empty:
-                split_index = split_index[0]  # Get the first occurrence
-                print(f"Using split index: {split_index}")
-                
-                # Split the table into two parts
-                table1 = table.iloc[:split_index]  # Before "POST HARVEST CARBON IMPACTS"
-                table2 = table.iloc[split_index:]  # From "POST HARVEST CARBON IMPACTS"
-                
-                # Add a new header row for the second table
-                table2.reset_index(drop=True, inplace=True)
-                table2.loc[0] = table2.columns  # Promote column names as a new header row
-                table2.columns = ['Attributes', 'Year 0 post-harvest', 'By Year 100 Post-Harvest',
-                                  'Year 0 post-harvest', 'By Year 100 Post-Harvest']  # Rename columns
-                table2 = table2.iloc[1:]  # Drop the original header row
+                split_index = split_index[0]
+                print(f"Splitting Table {i} at index {split_index} based on column '{split_column}'")
 
-                # Add the split tables to the new list
+                # Split the table
+                table1 = table.iloc[:split_index]
+                table2 = table.iloc[split_index:]
+
+                # Reset and format table2
+                table2.reset_index(drop=True, inplace=True)
+                table2.loc[0] = table2.columns  # Promote column names to the first row
+                table2.columns = ['Attributes', 'Year 0 post-harvest', 'By Year 100 Post-Harvest',
+                                'Year 0 post-harvest', 'By Year 100 Post-Harvest']
+                table2 = table2.iloc[1:]  # Drop the header row
+
+                # Append both tables
                 new_tables.append(table1)
                 new_tables.append(table2)
             else:
@@ -480,10 +487,10 @@ def output():
     
     # Create new column names, preserving original first and fourth columns
     new_cols = [
-        original_cols[0],  # First column (unchanged)
+        'ECOSYSTEM CARBON IMPACTS From Forest Growth',  # First column (unchanged)
         'Value',           # Second column
         'Value',           # Third column
-        original_cols[3],  # Fourth column (unchanged)
+        'BAU scenario (only calculated for Extended Rotation activity)',  # Fourth column (unchanged)
         'Value'            # Fifth column (to be dropped)
     ]
     
@@ -491,7 +498,7 @@ def output():
     temp_df.columns = new_cols
     
     # Drop only the last column
-    temp_df = temp_df.iloc[:, [0, 1, 3]]
+    temp_df = temp_df.iloc[2:, [0, 1, 3]]
     
     # Update the table
     list_tables[2] = temp_df
