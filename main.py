@@ -23,19 +23,6 @@ npv1, npv2, npv3, npv4 = 0, 0, 0, 0
 
 pd.set_option('display.max_columns', None)
 
-def is_float(s):
-    """Check if a string can be converted to a float."""
-    s = s.replace('.', '', 1)
-    return s.isdigit()
-
-# function to filter numbers larger than the last number
-def filter_larger_than_last(numbers):
-    if not numbers:
-        return None
-    last_number = numbers[-1]
-    filtered_list = [num for num in numbers if num > last_number]
-    return filtered_list if filtered_list else [last_number]
-
 def convert_to_numeric(value):
     try:
         return float(str(value).strip().replace(",", ""))
@@ -228,7 +215,6 @@ def submit_form():
             for x in list_table_temp.iloc[3, 1:].tolist()
         ]
         # formatted_numbers = [x for x in filtered_numbers if isinstance(x, (int, float)) and x > 0]
-        # eco_carbon = len(formatted_numbers) and ", ".join(map(str, filter_larger_than_last(formatted_numbers)))
 
         # Find the first non-negative value in the last row, iterating from right to left
         last_row = list_table_temp.iloc[-1, 1:].astype(str).reset_index(drop=True)  # Exclude the 'Attributes' column
@@ -426,7 +412,12 @@ def safe_round(value):
     except (ValueError, TypeError) as e:
         print(f"Failed to round value: {value}, Error: {e}")
         return value
-    
+
+def format_number_with_commas(x):
+    if isinstance(x, (int, float)):
+        return "{:,}".format(x)
+    return x
+
 @app.route('/output')
 def output():
     global list_tables
@@ -443,8 +434,8 @@ def output():
         split_column = None
         for col in table.columns:
             table[col] = table[col].apply(
-                lambda x: safe_round(x) if isinstance(x, (int, float)) or (
-                    isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+                lambda x: format_number_with_commas(safe_round(x)) if isinstance(x, (int, float)) or (
+                    isinstance(x, str) and x.replace('-', '').replace('.', '').isdigit()) else x)
             
             if any("POST HARVEST CARBON IMPACTS" in str(val) for val in table[col]):
                 split_column = col
@@ -469,6 +460,22 @@ def output():
                 table2.columns = ['Attributes', 'Year 0 post-harvest', 'By Year 100 Post-Harvest',
                                 'Year 0 post-harvest', 'By Year 100 Post-Harvest']
                 table2 = table2.iloc[1:]  # Drop the header row
+
+                # Round and format numeric values in both tables
+                for col in table1.columns:
+                    table1[col] = table1[col].apply(
+                        lambda x: format_number_with_commas(safe_round(x)) if isinstance(x, (int, float)) or (
+                            isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+                
+                for col in table2.columns:
+                    table2[col] = table2[col].apply(
+                        lambda x: format_number_with_commas(safe_round(x)) if isinstance(x, (int, float)) or (
+                            isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+                
+                if "ChiSquare Decay Function" in table2['Attributes'].values:
+                    table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :] = table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :].applymap(
+                        lambda x: '-' if x != "ChiSquare Decay Function" else x
+                    )
 
                 # Append both tables
                 new_tables.append(table1)
@@ -518,48 +525,48 @@ def output():
 def finaloutput():
     rounded_ccf = {
         'combined': ccf['combined'],
-        'a_values': [safe_round(x) for x in ccf['a_values']],
-        'b_values': [safe_round(x) for x in ccf['b_values']],
-        'a_minus_b_values': [safe_round(x) for x in ccf['a_minus_b_values']]
+        'a_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_values']],
+        'b_values': [format_number_with_commas(safe_round(x)) for x in ccf['b_values']],
+        'a_minus_b_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_minus_b_values']]
     }
     
     return render_template('finaloutput.html', 
-        npv1=safe_round(npv1),
-        npv2=safe_round(npv2),
-        npv21=safe_round(npv21),
-        npv3=safe_round(npv3),
-        npv4=safe_round(npv4),
-        npv5=safe_round(npv5),
-        hyb=safe_round(hyb),
-        hye=safe_round(hye),
-        eco_carbon=safe_round(eco_carbon),
+        npv1=format_number_with_commas(safe_round(npv1)),
+        npv2=format_number_with_commas(safe_round(npv2)),
+        npv21=format_number_with_commas(safe_round(npv21)),
+        npv3=format_number_with_commas(safe_round(npv3)),
+        npv4=format_number_with_commas(safe_round(npv4)),
+        npv5=format_number_with_commas(safe_round(npv5)),
+        hyb=format_number_with_commas(safe_round(hyb)),
+        hye=format_number_with_commas(safe_round(hye)),
+        eco_carbon=format_number_with_commas(safe_round(eco_carbon)),
         ccf=rounded_ccf,
-        carbon_seq=safe_round(carbon_seq),
-        total_hwp=safe_round(total_hwp),
-        total_afolu=safe_round(total_afolu),
-        benefit=safe_round(benefit),
-        area=safe_round(g_area)
+        carbon_seq=format_number_with_commas(safe_round(carbon_seq)),
+        total_hwp=format_number_with_commas(safe_round(total_hwp)),
+        total_afolu=format_number_with_commas(safe_round(total_afolu)),
+        benefit=format_number_with_commas(safe_round(benefit)),
+        area=format_number_with_commas(safe_round(g_area))
     )
 
 @app.route('/summary')
 def summary():
     rounded_ccf = {
         'combined': ccf['combined'],
-        'a_values': [safe_round(x) for x in ccf['a_values']],
-        'b_values': [safe_round(x) for x in ccf['b_values']],
-        'a_minus_b_values': [safe_round(x) for x in ccf['a_minus_b_values']]
+        'a_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_values']],
+        'b_values': [format_number_with_commas(safe_round(x)) for x in ccf['b_values']],
+        'a_minus_b_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_minus_b_values']]
     }
     
     return render_template('summary.html',
-        hyb=safe_round(hyb),
-        hye=safe_round(hye),
-        eco_carbon=safe_round(eco_carbon),
+        hyb=format_number_with_commas(safe_round(hyb)),
+        hye=format_number_with_commas(safe_round(hye)),
+        eco_carbon=format_number_with_commas(safe_round(eco_carbon)),
         ccf=rounded_ccf,
-        carbon_seq=safe_round(carbon_seq),
-        total_hwp=safe_round(total_hwp),
-        total_afolu=safe_round(total_afolu),
-        benefit=safe_round(benefit),
-        area=safe_round(g_area)
+        carbon_seq=format_number_with_commas(safe_round(carbon_seq)),
+        total_hwp=format_number_with_commas(safe_round(total_hwp)),
+        total_afolu=format_number_with_commas(safe_round(total_afolu)),
+        benefit=format_number_with_commas(safe_round(benefit)),
+        area=format_number_with_commas(safe_round(g_area))
     )
 
 if __name__ == '__main__':

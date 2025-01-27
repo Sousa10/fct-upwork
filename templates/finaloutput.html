@@ -607,6 +607,18 @@
                 document.getElementById("economicAnalysisForm").style.display = "block";
             }
 
+            function roundNumber(x) {
+                return Math.floor(x);
+            }
+
+            function formatNumberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+            function roundAndFormatNumber(x) {
+                return formatNumberWithCommas(roundNumber(x));
+            }
+
             function submitEconomicAnalysis() {
                 // Gather the form data
                 var economicData = {
@@ -646,12 +658,12 @@
                         // Redirect to the final output page
                         // window.location.href = '/finaloutput';
                         const { npv1, npv2, npv21, npv3, npv4, npv5 } = data.npv_values;
-                        document.getElementById("npv1").textContent = npv1;
-                        document.getElementById("npv2").textContent = npv2;
-                        document.getElementById("npv21").textContent = npv21;
-                        document.getElementById("npv3").textContent = npv3;
-                        document.getElementById("npv4").textContent = npv4;
-                        document.getElementById("npv5").textContent = npv5;
+                        document.getElementById("npv1").textContent = roundAndFormatNumber(npv1);
+                        document.getElementById("npv2").textContent = roundAndFormatNumber(npv2);
+                        document.getElementById("npv21").textContent = roundAndFormatNumber(npv21);
+                        document.getElementById("npv3").textContent = roundAndFormatNumber(npv3);
+                        document.getElementById("npv4").textContent = roundAndFormatNumber(npv4);
+                        document.getElementById("npv5").textContent = roundAndFormatNumber(npv5);
                         document.getElementById('submit-button').classList.toggle("button--loading");
                     })
                     .catch((error) => {
