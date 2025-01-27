@@ -207,7 +207,7 @@ def submit_form():
             un = list_table_temp.iloc[:, j].unique()
             if len(un) == 1 and un[0] == 0 and j < ind:
                 ind = j
-        list_table_temp = list_table_temp.iloc[:, :ind].reset_index(drop=True)
+        list_table_temp = list_table_temp.iloc[1:, :ind].reset_index(drop=True)
         filtered_numbers = [
             int(x.replace(',', '')) if isinstance(x, str) and x.replace(',', '').lstrip('-').isdigit() and x.replace(',', '').isdigit()
             else float(x.replace(',', '')) if isinstance(x, str) and x.replace(',', '').lstrip('-').isdigit()
