@@ -256,7 +256,7 @@ def submit_form():
                 raise ValueError(f"Expected at least 19 rows, but got {forest_mgmt.shape[0]}")
             
             # Trim the DataFrame to the appropriate range
-            forest_mgmt = forest_mgmt.iloc[0:21, 1:6].fillna('-')
+            forest_mgmt = forest_mgmt.iloc[0:23, 1:6].fillna('-')
             # print(forest_mgmt)
             
             # Append the trimmed DataFrame to the list
@@ -462,10 +462,10 @@ def output():
                 table2 = table2.iloc[1:]  # Drop the header row
 
                 # Round and format numeric values in both tables
-                for col in table1.columns:
-                    table1[col] = table1[col].apply(
-                        lambda x: format_number_with_commas(safe_round(x)) if isinstance(x, (int, float)) or (
-                            isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
+                # for col in table1.columns:
+                #     table1[col] = table1[col].apply(
+                #         lambda x: format_number_with_commas(safe_round(x)) if isinstance(x, (int, float)) or (
+                #             isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
                 
                 for col in table2.columns:
                     table2[col] = table2[col].apply(
