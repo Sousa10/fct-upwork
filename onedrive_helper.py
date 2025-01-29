@@ -8,14 +8,15 @@ class OneDriveHelper:
             AZURE_SETTINGS['client_id'],
             authority=AZURE_SETTINGS['authority'],
             token_cache=msal.SerializableTokenCache(),
-            # client_credential=AZURE_SETTINGS['client_secret']
         )
         self.access_token = self._get_token()
 
     def _get_token(self):
-        result = self.app.acquire_token_interactive(AZURE_SETTINGS['scopes'])
-        if not result:
-            result = self.app.acquire_token_for_client(scopes=AZURE_SETTINGS['scopes'])
+        flow = self.app.initiate_device_flow(scopes=AZURE_SETTINGS['scopes'])
+        if 'user_code' not in flow:
+            raise Exception("Failed to create device flow. Error: {}".format(flow.get('error')))
+        print(flow['message'])  # Instruct the user to visit the URL and enter the code
+        result = self.app.acquire_token_by_device_flow(flow)
         if 'access_token' in result:
             return result['access_token']
         else:
@@ -58,11 +59,11 @@ class OneDriveHelper:
             print(f"Error: {e.response.text}")
             raise
     
-    def recalculate_workbook(self, file_id):
+    def recalculate_workbook(self, file_path):
         """
         Triggers recalculation for the entire workbook.
         """
-        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{file_id}/workbook/application/calculate"
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/application/calculate"
         headers = {'Authorization': f'Bearer {self.access_token}'}
         data = {"calculationType": "Full"}  # Options: Full, Recalculate
         response = requests.post(endpoint, headers=headers, json=data)
@@ -109,4 +110,3 @@ class OneDriveHelper:
         except requests.exceptions.RequestException as e:
             print(f"Error: {e.response.text if e.response else str(e)}")
             raise
-

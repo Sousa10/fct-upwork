@@ -556,6 +556,9 @@ def summary():
         'b_values': [format_number_with_commas(safe_round(x)) for x in ccf['b_values']],
         'a_minus_b_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_minus_b_values']]
     }
+
+    onedrive = OneDriveHelper()
+    onedrive.recalculate_workbook(FILE_PATH)
     
     return render_template('summary.html',
         hyb=format_number_with_commas(safe_round(hyb)),
