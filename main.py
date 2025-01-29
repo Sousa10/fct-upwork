@@ -8,6 +8,7 @@ from onedrive_helper import OneDriveHelper
 from config import EXCEL_FILE_ID, FILE_PATH
 import requests
 import logging
+import time
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -38,6 +39,24 @@ def index():
     hc_table = None
     
     return render_template('index.html')
+
+def wait_for_update(onedrive, file_path, max_wait=10):
+    last_modified = None
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        metadata = onedrive.get_file_metadata(file_path)
+        new_last_modified = metadata.get('lastModifiedDateTime')
+
+        if new_last_modified and new_last_modified != last_modified:
+            print(f"✅ File update detected at {new_last_modified}")
+            return True
+        
+        print("⏳ Waiting for file update...")
+        time.sleep(1)
+
+    print("⚠️ Timeout waiting for file update")
+    return False
 
 @app.route('/submit_form', methods=['POST'])
 def submit_form():
@@ -118,6 +137,12 @@ def submit_form():
 
         # Read other sheets using Microsoft Graph API
         # Read other sheets using Microsoft Graph API with specified range
+         # Wait for update to complete
+        print("Waiting for Excel update to complete...")
+        # if not wait_for_update_completion(onedrive, FILE_PATH):
+        #     raise Exception("Excel update did not complete in time")
+        # wait_for_update(onedrive, FILE_PATH)
+        
         try:
             harvest_carbon_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator', 'A1:Z100')
             harvest_carbon_bau_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
@@ -125,10 +150,6 @@ def submit_form():
             # Extract values from the response
             harvest_carbon = harvest_carbon_response.get('values')
             harvest_carbon_bau = harvest_carbon_bau_response.get('values')
-            
-            # Debug print to check the content of values
-            # print(f"harvest_carbon values: {harvest_carbon}")
-            # print(f"harvest_carbon_bau values: {harvest_carbon_bau}")
             
             if harvest_carbon is None or harvest_carbon_bau is None:
                 raise ValueError("No data found in the specified range")
@@ -147,7 +168,9 @@ def submit_form():
         # Ensure harvest_carbon and harvest_carbon_bau are valid inputs for pd.DataFrame
         try:
             hc = pd.DataFrame(harvest_carbon).iloc[0:6, 17:24]
+            print(f"hc: {hc}")
             hc_bau = pd.DataFrame(harvest_carbon_bau).iloc[0:6, 17:24]
+            print(f"hc_bau: {hc_bau}")
         except Exception as e:
             print(f"Error creating DataFrame: {e}")
             return jsonify({"error": "Invalid data format for harvest_carbon or harvest_carbon_bau"}), 400
@@ -473,7 +496,7 @@ def output():
                             isinstance(x, str) and x.replace(',', '').replace('-', '').replace('.', '').isdigit()) else x)
                 
                 if "ChiSquare Decay Function" in table2['Attributes'].values:
-                    table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :] = table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :].applymap(
+                    table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :] = table2.loc[table2['Attributes'] == "ChiSquare Decay Function", :].map(
                         lambda x: '-' if x != "ChiSquare Decay Function" else x
                     )
 
@@ -557,8 +580,10 @@ def summary():
         'a_minus_b_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_minus_b_values']]
     }
 
-    onedrive = OneDriveHelper()
-    onedrive.recalculate_workbook(FILE_PATH)
+    print(f"ccf: {ccf['b_values']}")
+
+    # onedrive = OneDriveHelper()
+    # onedrive.recalculate_workbook(FILE_PATH)
     
     return render_template('summary.html',
         hyb=format_number_with_commas(safe_round(hyb)),
