@@ -1,23 +1,39 @@
 import msal
 import requests
+import os
 from config import AZURE_SETTINGS
 
 class OneDriveHelper:
     def __init__(self):
+        self.token_cache = msal.SerializableTokenCache()
         self.app = msal.PublicClientApplication(
             AZURE_SETTINGS['client_id'],
             authority=AZURE_SETTINGS['authority'],
-            token_cache=msal.SerializableTokenCache(),
+            token_cache=self.token_cache,
         )
         self.access_token = self._get_token()
 
     def _get_token(self):
+        # Load token cache from file if it exists
+        cache_file = 'token_cache.bin'
+        if os.path.exists(cache_file):
+            self.token_cache.deserialize(open(cache_file, 'r').read())
+
+        accounts = self.app.get_accounts()
+        if accounts:
+            result = self.app.acquire_token_silent(AZURE_SETTINGS['scopes'], account=accounts[0])
+            if 'access_token' in result:
+                return result['access_token']
+
+        # If no valid token is found, initiate device flow
         flow = self.app.initiate_device_flow(scopes=AZURE_SETTINGS['scopes'])
         if 'user_code' not in flow:
             raise Exception("Failed to create device flow. Error: {}".format(flow.get('error')))
         print(flow['message'])  # Instruct the user to visit the URL and enter the code
         result = self.app.acquire_token_by_device_flow(flow)
         if 'access_token' in result:
+            # Save token cache to file
+            open(cache_file, 'w').write(self.token_cache.serialize())
             return result['access_token']
         else:
             raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
