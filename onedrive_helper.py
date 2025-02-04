@@ -2,6 +2,7 @@ import msal
 import requests
 import os
 from config import AZURE_SETTINGS
+import re
 
 class OneDriveHelper:
     def __init__(self):
@@ -11,7 +12,9 @@ class OneDriveHelper:
             authority=AZURE_SETTINGS['authority'],
             token_cache=self.token_cache,
         )
+        self.session = requests.Session()  #FIXED: Initialize session
         self.access_token = self._get_token()
+        # self.check_token_permissions(self.access_token)
 
     def _get_token(self):
         # Load token cache from file if it exists
@@ -38,12 +41,78 @@ class OneDriveHelper:
         else:
             raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
 
+    def check_token_permissions(self, access_token):
+        """Check the scopes included in the access token"""
+        endpoint = "https://graph.microsoft.com/v1.0/me"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        
+        response = requests.get(endpoint, headers=headers)
+        print(response.json())
+    
+    def refresh_workbook(self, file_path, session_id):
+        """Refresh workbook to ensure updates are applied"""
+        session_id = self.create_session(file_path)
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/application/calculate"
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json',
+            'workbook-session-id': session_id
+        }
+        data = {"calculationType": "Full"}
+        response = self.session.post(endpoint, headers=headers, json=data)
+        print(f"Response Status: {response.status_code}")
+        print(f"Response Body: {response.text}")
+        response.raise_for_status()
+        self.close_session(file_path, session_id)
+        return response.json()
+
+        
+    def create_session(self, file_path):
+        """Create a session for updating the Excel file"""
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/createSession"
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(endpoint, headers=headers, json={"persistChanges": True})
+        response.raise_for_status()
+
+        session_data = response.json()
+        print(f"📂 Full Session Response: {session_data}")  # Debugging log
+
+        # Extract only the 'usid' part
+        session_id_match = re.search(r"usid=([a-fA-F0-9-]+)", session_data.get("id", ""))
+        session_id = session_id_match.group(1) if session_id_match else None
+
+        if not session_id:
+            raise ValueError(f"❌ Failed to extract a valid session ID! Response: {session_data}")
+
+        print(f"✅ Extracted session ID: {session_id}")  # Debugging log
+        return session_id
+
+    def close_session(self, file_path, session_id):
+        """Close the workbook session"""
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/closeSession"
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json',
+            'workbook-session-id': session_id
+        }
+        response = requests.post(endpoint, headers=headers)
+        response.raise_for_status()
+
     def update_excel(self, file_path, worksheet_name, range_address, values):
+        session_id = self.create_session(file_path)  # Start session
+        if not session_id:
+            raise ValueError("❌ No session ID returned!")
+        # Refresh workbook before making changes
+        self.refresh_workbook(file_path, session_id)
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         
         headers = {
             'Authorization': f'Bearer {self.access_token}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'workbook-session-id': session_id  # Attach session ID
         }
         data = {
             'values': values
@@ -52,7 +121,14 @@ class OneDriveHelper:
         # print(f"Payload: {data}")
         response = requests.patch(endpoint, headers=headers, json=data)
         # print(f"Response: {response.status_code}, {response.text}")
-        response.raise_for_status()
+        if response.status_code not in [200, 201, 204]:
+            print(f"❌ Request failed with status {response.status_code}: {response.text}")
+            raise requests.exceptions.RequestException(response)
+
+        print(f"✅ Successfully updated {file_path}")
+        # Refresh workbook again after update
+        self.refresh_workbook(file_path, session_id)
+        self.close_session(file_path, session_id)  # Close session after update
         return response.json()
 
     def read_excel(self, file_path, worksheet_name, range_address):

@@ -119,7 +119,7 @@ def submit_form():
                 values
             )
         except requests.exceptions.RequestException as e:
-            logging.error(f"Request failed: {e.response.text}")  # Log response details
+            logging.error(f"Request failed: {e.response}")  # Log response details
             return jsonify({"error": str(e)}), 500
         
         # try:
