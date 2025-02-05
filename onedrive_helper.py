@@ -80,14 +80,13 @@ class OneDriveHelper:
         session_data = response.json()
         print(f"📂 Full Session Response: {session_data}")  # Debugging log
 
-        # Extract only the 'usid' part
-        session_id_match = re.search(r"usid=([a-fA-F0-9-]+)", session_data.get("id", ""))
-        session_id = session_id_match.group(1) if session_id_match else None
-
+         # Use the complete session ID instead of extracting just the usid
+        session_id = session_data.get("id")
+        
         if not session_id:
-            raise ValueError(f"❌ Failed to extract a valid session ID! Response: {session_data}")
+            raise ValueError(f"❌ Failed to get session ID! Response: {session_data}")
 
-        print(f"✅ Extracted session ID: {session_id}")  # Debugging log
+        print(f"✅ Session ID: {session_id}")  # Debugging log
         return session_id
 
     def close_session(self, file_path, session_id):
@@ -106,7 +105,7 @@ class OneDriveHelper:
         if not session_id:
             raise ValueError("❌ No session ID returned!")
         # Refresh workbook before making changes
-        self.refresh_workbook(file_path, session_id)
+        # self.refresh_workbook(file_path, session_id)
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         
         headers = {
@@ -127,7 +126,7 @@ class OneDriveHelper:
 
         print(f"✅ Successfully updated {file_path}")
         # Refresh workbook again after update
-        self.refresh_workbook(file_path, session_id)
+        # self.refresh_workbook(file_path, session_id)
         self.close_session(file_path, session_id)  # Close session after update
         return response.json()
 
