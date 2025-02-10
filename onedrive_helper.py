@@ -16,6 +16,15 @@ class OneDriveHelper:
         self.access_token = self._get_token()
         # self.check_token_permissions(self.access_token)
 
+    def refresh_token(self):
+        accounts = self.app.get_accounts()
+        if accounts:
+            result = self.app.acquire_token_silent(AZURE_SETTINGS['scopes'], account=accounts[0])
+            if 'access_token' in result:
+                open('token_cache.bin', 'w').write(self.token_cache.serialize())
+                return result['access_token']
+        return self._get_token()
+
     def _get_token(self):
         # Load token cache from file if it exists
         cache_file = 'token_cache.bin'
@@ -69,6 +78,7 @@ class OneDriveHelper:
         
     def create_session(self, file_path):
         """Create a session for updating the Excel file"""
+        self.access_token = self.refresh_token()  # Refresh token before creating session
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/createSession"
         headers = {
             'Authorization': f'Bearer {self.access_token}',
