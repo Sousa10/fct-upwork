@@ -244,7 +244,8 @@ def submit_form():
         # print(f"Last row: {last_row}")
         last_row = last_row.str.replace(',', '')  # Remove commas
         last_row = pd.to_numeric(last_row, errors='coerce')  # Convert to numeric, setting errors to NaN
-        eco_carbon = next((x for x in reversed(last_row) if x >= 0), None)
+        eco_carbon = last_row.iloc[-1]  # Get the rightmost value
+        # eco_carbon = next((x for x in reversed(last_row) if x >= 0), None)
         
         list_tables.append(list_table_temp)
 

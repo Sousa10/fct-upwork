@@ -342,8 +342,10 @@
             </select>
             <p style="text-align: center; font-weight: bold;"><span>Note: The tool applies default fuelwood values that are generated from sawlog and pulpwood production</span></p>
             <div class="button-container">
-                <input type="button" value="Add/Submit" onclick="addEntryAndShowTable();">
-                <input type="button" value="Clear" onclick="ClearFields();">
+                <button id="addSubmitButton" type="button" class="loading-button" onclick="addEntryAndShowTable();" id="addSubmitButton">
+                    <span class="button__text">Add/Submit</span>
+                </button>
+                <!-- <input type="button" value="Clear" onclick="ClearFields();"> -->
             </div>
         </form>
         <div id="tableContainer" class="hidden">
@@ -417,15 +419,18 @@
                 document.getElementById("tableBody").appendChild(newRow); // Append new row to table body
 
                 // Show the table
-                document.getElementById("tableContainer").classList.remove("hidden");
+                // document.getElementById("tableContainer").classList.remove("hidden");
                 forestData.push(formData);
 
                 // Show the Display Output button
-                document.getElementById("submit-button").classList.remove("hidden");
+                // document.getElementById("submit-button").classList.remove("hidden");
 
                 // Clear form fields for the next entry
                 ClearFields();
                 localStorage.setItem("isExtended", formData.forestManagementTreatment === "Extended rotation");
+
+                 // Add loading state to the Add/Submit button
+                $('#addSubmitButton').addClass("button--loading");
 
                 isProcessing = true;
                 fetch('/submit_form', {
@@ -439,6 +444,9 @@
                     .then(data => {
                         console.log(data);
                         isProcessing = false;
+                        // Remove loading state and redirect
+                        $('#addSubmitButton').removeClass("button--loading");
+                        window.location.replace('/output');
                     })
                     .catch((error) => {
                         console.error('Error:', error);
@@ -498,6 +506,10 @@
             }
 
             $('#submit-button').click(function () {
+                $(this).addClass("button--loading");
+                produceOutput();
+            });
+            $('#addSubmitButton').click(function () {
                 $(this).addClass("button--loading");
                 produceOutput();
             });
