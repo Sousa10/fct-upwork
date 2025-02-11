@@ -34,21 +34,25 @@ class OneDriveHelper:
         accounts = self.app.get_accounts()
         if accounts:
             result = self.app.acquire_token_silent(AZURE_SETTINGS['scopes'], account=accounts[0])
-            if 'access_token' in result:
+            if result and 'access_token' in result:
+                print("🔄 Using cached access token")
                 return result['access_token']
 
         # If no valid token is found, initiate device flow
+        print("⚡ Requesting new access token via Device Code Flow...")
         flow = self.app.initiate_device_flow(scopes=AZURE_SETTINGS['scopes'])
         if 'user_code' not in flow:
-            raise Exception("Failed to create device flow. Error: {}".format(flow.get('error')))
+            raise Exception(f"❌ Failed to create device flow: {flow.get('error')}")
+        
         print(flow['message'])  # Instruct the user to visit the URL and enter the code
         result = self.app.acquire_token_by_device_flow(flow)
+
         if 'access_token' in result:
             # Save token cache to file
             open(cache_file, 'w').write(self.token_cache.serialize())
             return result['access_token']
-        else:
-            raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
+    
+        raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
 
     def check_token_permissions(self, access_token):
         """Check the scopes included in the access token"""
@@ -57,6 +61,23 @@ class OneDriveHelper:
         
         response = requests.get(endpoint, headers=headers)
         print(response.json())
+    
+    def test_access_token(self):
+        """Test if the access token is valid by fetching OneDrive metadata."""
+        if not self.access_token:
+            print("❌ No access token available!")
+            return
+        
+        print(f"🔑 Testing Access Token: {self.access_token[:50]}...")  # Print first 50 chars
+        test_url = "https://graph.microsoft.com/v1.0/me/drive/root"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = requests.get(test_url, headers=headers)
+        
+        if response.status_code == 200:
+            print("✅ Access Token is valid!")
+        else:
+            print(f"❌ Token Test Failed: {response.status_code}, {response.text}")
+
     
     def refresh_workbook(self, file_path, session_id):
         """Refresh workbook to ensure updates are applied"""
@@ -85,7 +106,14 @@ class OneDriveHelper:
             'Content-Type': 'application/json'
         }
         response = requests.post(endpoint, headers=headers, json={"persistChanges": True})
-        response.raise_for_status()
+        
+        print(f"🔄 Session API Response: {response.status_code}, {response.text}")  # Debug log
+
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            print(f"❌ Error in create_session: {str(e)}")
+            return None
 
         session_data = response.json()
         print(f"📂 Full Session Response: {session_data}")  # Debugging log
@@ -111,11 +139,22 @@ class OneDriveHelper:
         response.raise_for_status()
 
     def update_excel(self, file_path, worksheet_name, range_address, values):
-        session_id = self.create_session(file_path)  # Start session
+        print(f"📂 Updating {file_path}...")  # Debugging log
+    
+        try:
+            print("⚡ Calling create_session...")
+            session_id = self.create_session(file_path)
+            print(f"✅ session_id in update: {session_id}")
+        except Exception as e:
+            print(f"❌ Failed to create session: {str(e)}")
+            return None  # Prevent function from proceeding
+        
         if not session_id:
             raise ValueError("❌ No session ID returned!")
+        
         # Refresh workbook before making changes
         # self.refresh_workbook(file_path, session_id)
+        
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         
         headers = {
@@ -135,8 +174,10 @@ class OneDriveHelper:
             raise requests.exceptions.RequestException(response)
 
         print(f"✅ Successfully updated {file_path}")
+
         # Refresh workbook again after update
         # self.refresh_workbook(file_path, session_id)
+        
         self.close_session(file_path, session_id)  # Close session after update
         return response.json()
 
