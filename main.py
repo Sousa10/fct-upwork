@@ -383,6 +383,7 @@ def calculate_factor():
     global npv1, npv2, npv21, npv3, npv4, npv5
     i = float(ec_data.get("interestRate", 5))/100
     carbon_price = float(ec_data.get("carbonPrice"))
+    print(f"carbon_price: {carbon_price}")  
     n1 = int(hyb)
     n2 = int(hye)
     npv1 = sum(sum_a_values) / ((1 + i) ** n1)
@@ -390,12 +391,13 @@ def calculate_factor():
     npv21 = npv2 - npv1
     npv3 = 0
     if carbon_unit == "tonne-co2eq":
-        if isinstance(benefit, str):
-            formatted_benefit = float(benefit.replace(",", "")) if float(benefit.replace(",", "")) < 0 else 0
-        else:
-            formatted_benefit = benefit if benefit < 0 else 0
-        npv3 = formatted_benefit * carbon_price
-        print(f"formatted_benefit: {formatted_benefit}")
+        print(f"benefit: {type(benefit)}")
+        # if isinstance(benefit, float):
+        #     formatted_benefit = float(benefit.replace(",", "")) if float(benefit.replace(",", "")) < 0 else 0
+        # else:
+        #     formatted_benefit = benefit if benefit < 0 else 0
+        npv3 = benefit * carbon_price
+        # print(f"formatted_benefit: {formatted_benefit}")
     else:
         f = float(hye) - float(hyb)
         npv3 = g_area * carbon_price * f
