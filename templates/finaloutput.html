@@ -343,6 +343,7 @@
     </div>
     <div class="button-container">
         <input type="button" value="Recalculate" onclick="toggleForm()">
+        <input type="button" value="Home" onclick="window.location.href='/'">
     </div>
     <h2>Economic Analysis Results</h2>
     <table>
@@ -405,6 +406,28 @@
                     (additional sequestration as compared to the BAU scenario</td>
                 <td style="text-align: center;">{{ eco_carbon }}</td>
             </tr>
+            <tr>
+                <td>Benefit from Extending Rotation (i.e., the difference between BAU and Planned Activity Scenario
+                    results) (t CO2eq). )</td>
+                <td style="text-align: center;">{{ benefit }}</td>
+            </tr>
+            <tr>
+                <td>Area subject to management activity </td>
+                <td style="text-align: center;">{{ area }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Output Tables for your Inputs</h2>
+
+    <table border="1" id="summary_table">
+        <thead>
+            <tr>
+                <th style="text-align: center;">Item</th>
+                <th style="text-align: center;">Values</th>
+            </tr>
+        </thead>
+        <tbody>
             {% for value in ccf.combined %}
                 <tr>
                     <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator (BAU) ‘ sheet</td>
@@ -435,15 +458,6 @@
                 <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
                     CO2eq).</td>
                 <td style="text-align: center;">{{ total_afolu }}</td>
-            </tr>
-            <tr>
-                <td>Benefit from Extending Rotation (i.e., the difference between BAU and Planned Activity Scenario
-                    results) (t CO2eq). )</td>
-                <td style="text-align: center;">{{ benefit }}</td>
-            </tr>
-            <tr>
-                <td>Area subject to management activity </td>
-                <td style="text-align: center;">{{ area }}</td>
             </tr>
         </tbody>
     </table>
