@@ -295,9 +295,10 @@ def submit_form():
 
 @app.route('/calculate_factor', methods=['POST'])
 def calculate_factor():
-    global prices
+    global prices, ec_data
     data = request.get_json()
     ec_data = data.get('economicData', {})
+    print(f"ec_data in CF: {ec_data}")
     x1 = 2.012072
     z1 = 1 / 1.05
     x2 = 2.012072
@@ -555,6 +556,8 @@ def finaloutput():
         'b_values': [format_number_with_commas(safe_round(x)) for x in ccf['b_values']],
         'a_minus_b_values': [format_number_with_commas(safe_round(x)) for x in ccf['a_minus_b_values']]
     }
+
+    print(f"economic_data: {ec_data}")
     
     return render_template('finaloutput.html', 
         npv1=format_number_with_commas(safe_round(npv1)),
@@ -571,7 +574,8 @@ def finaloutput():
         total_hwp=format_number_with_commas(safe_round(total_hwp)),
         total_afolu=format_number_with_commas(safe_round(total_afolu)),
         benefit=format_number_with_commas(safe_round(benefit)),
-        area=format_number_with_commas(safe_round(g_area))
+        area=format_number_with_commas(safe_round(g_area)),
+        economic_data=ec_data
     )
 
 @app.route('/summary')
