@@ -415,6 +415,19 @@
                 <td>Area subject to management activity </td>
                 <td style="text-align: center;">{{ area }}</td>
             </tr>
+            <tr>
+                <td>Carbon sequestration in living and dead carbon pools (not soil) (t CO2eq)</td>
+                <td style="text-align: center;">{{ carbon_seq }}</td>
+            </tr>
+            <tr>
+                <td>TOTAL HWP Biogenic Carbon Stored from Harvest (t CO2eq)</td>
+                <td style="text-align: center;">{{ total_hwp }}</td>
+            </tr>
+            <tr>
+                <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
+                    CO2eq).</td>
+                <td style="text-align: center;">{{ total_afolu }}</td>
+            </tr>
         </tbody>
     </table>
 
@@ -435,38 +448,65 @@
                     <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator (BAU) ‘ sheet</td>
                     <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
                     <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
-                    <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% if 'Softwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% elif 'Softwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p2_unit }}</td>
+                    {% elif 'Softwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p3_unit }}</td>
+                    {% elif 'Hardwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p4_unit }}</td>
+                    {% elif 'Hardwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p5_unit }}</td>
+                    {% elif 'Hardwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p6_unit }}</td>
+                    {% else %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% endif %}
                 </tr>
-            {% endfor %}
-                {% for value in ccf.combined %}
+            
                 <tr>
                     <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator ‘ sheet</td>
                     <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
                     <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
-                    <td style="text-align: center;">{{ economic_data.p2_unit }}</td>
+                    {% if 'Softwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% elif 'Softwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p2_unit }}</td>
+                    {% elif 'Softwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p3_unit }}</td>
+                    {% elif 'Hardwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p4_unit }}</td>
+                    {% elif 'Hardwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p5_unit }}</td>
+                    {% elif 'Hardwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p6_unit }}</td>
+                    {% else %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% endif %}
                 </tr>
-                {% endfor %}
-                {% for value in ccf.combined %}
+                
                 <tr>
                     <td>{{ value }} - Difference</td>
                     <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
                     <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
-                    <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
+                    {% if 'Softwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% elif 'Softwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p2_unit }}</td>
+                    {% elif 'Softwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p3_unit }}</td>
+                    {% elif 'Hardwood Sawlog' in value %}
+                        <td style="text-align: center;">{{ economic_data.p4_unit }}</td>
+                    {% elif 'Hardwood Pulpwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p5_unit }}</td>
+                    {% elif 'Hardwood Fuelwood' in value %}
+                        <td style="text-align: center;">{{ economic_data.p6_unit }}</td>
+                    {% else %}
+                        <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
-            <tr>
-                <td>Carbon sequestration in living and dead carbon pools (not soil) (t CO2eq)</td>
-                <td style="text-align: center;">{{ carbon_seq }}</td>
-            </tr>
-            <tr>
-                <td>TOTAL HWP Biogenic Carbon Stored from Harvest (t CO2eq)</td>
-                <td style="text-align: center;">{{ total_hwp }}</td>
-            </tr>
-            <tr>
-                <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
-                    CO2eq).</td>
-                <td style="text-align: center;">{{ total_afolu }}</td>
-            </tr>
         </tbody>
     </table>
 
