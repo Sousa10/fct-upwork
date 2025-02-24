@@ -276,87 +276,8 @@
     <div class="button-container" id="final_navigate">
         <input type="button" value="Perform Economic Analysis" onclick="window.location='/finaloutput'">
     </div>
-    <h1>Output Tables for your Inputs</h1>
-    <ul>
-        <table border="1" id="summary_table">
-            <thead>
-                <tr>
-                    <th style="text-align: center;">Item</th>
-                    <th style="text-align: center;">Values</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Years from now will you harvest under a business as usual scenario</td>
-                    <td style="text-align: center;">{{ hyb }}</td>
-                </tr>
-                <tr>
-                    <td>Harvest Year after Extended Rotation</td>
-                    <td style="text-align: center;">{{ hye }}
-                    </td>
-                </tr>
-                <tr>
-                    <td>NET Ecosystem Carbon Sequestration from adopting the planned activity (cumulative) ( t CO2eq).
-                        (additional sequestration as compared to the BAU scenario</td>
-                    <td style="text-align: center;">{{ eco_carbon }}</td>
-                </tr>
-                <tr>
-                    <td>Benefit from Extending Rotation (i.e., the difference between BAU and Planned Activity Scenario
-                        results) (t CO2eq). )</td>
-                    <td style="text-align: center;">{{ benefit }}</td>
-                </tr>
-                <tr>
-                    <td>Area subject to management activity </td>
-                    <td style="text-align: center;">{{ area }}</td>
-                </tr>
-                <tr>
-                    <td>Carbon sequestration in living and dead carbon pools (not soil) (t CO2eq)</td>
-                    <td style="text-align: center;">{{ carbon_seq }}</td>
-                </tr>
-                <tr>
-                    <td>TOTAL HWP Biogenic Carbon Stored from Harvest (t CO2eq)</td>
-                    <td style="text-align: center;">{{ total_hwp }}</td>
-                </tr>
-                <tr>
-                    <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
-                        CO2eq).</td>
-                    <td style="text-align: center;">{{ total_afolu }}</td>
-                </tr>
-            </tbody>
-        </table>
 
-        <h2>Output Tables for your Inputs</h2>
-
-        <table border="1" id="summary_table">
-            <thead>
-                <tr>
-                    <th style="text-align: center;">Item</th>
-                    <th style="text-align: center;">Wood Volume (CCF)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for value in ccf.combined %}
-                <tr>
-                    <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator (BAU) ‘ sheet</td>
-                    <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
-                </tr>
-                {% endfor %}
-                {% for value in ccf.combined %}
-                <tr>
-                    <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator ‘ sheet</td>
-                    <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
-                </tr>
-                {% endfor %}
-                {% for value in ccf.combined %}
-                <tr>
-                    <td>{{ value }} - Difference</td>
-                    <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
-                </tr>
-                {% endfor %}
-                
-            </tbody>
-        </table>
-    </ul>
+    <h1>Please input values to perform Economic Analysis</h1>
 
     <form id="economicAnalysisForm">
         <div class="form-row">
@@ -367,14 +288,14 @@
             <div class="form-group">
                 <label for="p1_unit">Select the units for softwood sawlog</label>
                 <select name="softwood-sawlog-unit" id="p1_unit">
-                    <option value="mbf-scribner">$/MBF (Scribner)</option>
-                    <option value="mbf-doyle">$/MBF (Doyle)</option>
-                    <option value="mbf-international" selected>$/MBF (International)</option>
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/MBF (Scribner)">$/MBF (Scribner)</option>
+                    <option value="$/MBF (Doyle)">$/MBF (Doyle)</option>
+                    <option value="$/MBF (International)" selected>$/MBF (International)</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
         </div>
@@ -387,16 +308,16 @@
             <div class="form-group">
                 <label for="p2_unit">Select the units for softwood pulpwood</label>
                 <select name="softwood-pulpwood-unit" id="p2_unit">
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
         </div>
 
-        <div class="form-row">
+        <!-- <div class="form-row">
             <div class="form-group">
                 <label for="p3">What is the price for softwood fuelwood?</label>
                 <input type="number" id="p3" name="p3" placeholder="Enter price" value="15" required>
@@ -404,14 +325,14 @@
             <div class="form-group">
                 <label for="p3_unit">Select the units for softwood fuelwood</label>
                 <select name="softwood-fuelwood-unit" id="p3_unit">
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
-        </div>
+        </div> -->
 
         <div class="form-row">
             <div class="form-group">
@@ -421,14 +342,14 @@
             <div class="form-group">
                 <label for="p4_unit">Select the units for hardwood sawlog</label>
                 <select name="hardwood-sawlog-unit" id="p4_unit">
-                    <option value="mbf-scribner">$/MBF (Scribner)</option>
-                    <option value="mbf-doyle">$/MBF (Doyle)</option>
-                    <option value="mbf-international">$/MBF (International)</option>
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/MBF (Scribner)">$/MBF (Scribner)</option>
+                    <option value="$/MBF (Doyle)">$/MBF (Doyle)</option>
+                    <option value="$/MBF (International)">$/MBF (International)</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
         </div>
@@ -441,16 +362,16 @@
             <div class="form-group">
                 <label for="p5_unit">Select the units for hardwood pulpwood</label>
                 <select name="hardwood-pulpwood-unit" id="p5_unit">
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
         </div>
 
-        <div class="form-row">
+        <!-- <div class="form-row">
             <div class="form-group">
                 <label for="p6">What is the price for hardwood fuelwood? ($/ton)</label>
                 <input type="number" id="p6" name="p6" placeholder="Enter price" value="15" required>
@@ -458,14 +379,14 @@
             <div class="form-group">
                 <label for="p6_unit">Select the units for softwood sawlog</label>
                 <select name="hardwood-fuelwood-unit" id="p6_unit">
-                    <option value="mbf-other">$/cord</option>
-                    <option value="ton-short">$/ton (short)</option>
-                    <option value="cubic-unit">$/cunit</option>
-                    <option value="cubic-foot">$/cubic foot</option>
-                    <option value="cubic-meters">$/cubic meters</option>
+                    <option value="$/cord">$/cord</option>
+                    <option value="$/ton (short)">$/ton (short)</option>
+                    <option value="$/cunit">$/cunit</option>
+                    <option value="$/cubic foot">$/cubic foot</option>
+                    <option value="$/cubic meters">$/cubic meters</option>
                 </select>
             </div>
-        </div>
+        </div> -->
 
         <div class="form-row">
             <div class="form-group">
@@ -483,8 +404,8 @@
                     <input type="number" id="carbonPrice" name="carbonPrice" placeholder="Enter price of carbon"
                         value="10" required>
                     <select name="carbon-price-unit" id="p7_unit">
-                        <option value="tonne-co2eq">$/tonne of CO2eq</option>
-                        <option value="acre-year">$/acre/year</option>
+                        <option value="$/tonne of CO2eq">$/tonne of CO2eq</option>
+                        <option value="$/acre/year">$/acre/year</option>
                     </select>
                 </div>
             </div>
@@ -508,14 +429,14 @@
                     p1_unit: document.getElementById("p1_unit")?.value,
                     p2: document.getElementById("p2")?.value,
                     p2_unit: document.getElementById("p2_unit")?.value,
-                    p3: document.getElementById("p3")?.value,
-                    p3_unit: document.getElementById("p3_unit")?.value,
+                    //p3: document.getElementById("p3")?.value,
+                    //p3_unit: document.getElementById("p3_unit")?.value,
                     p4: document.getElementById("p4")?.value,
                     p4_unit: document.getElementById("p4_unit")?.value,
                     p5: document.getElementById("p5")?.value,
                     p5_unit: document.getElementById("p5_unit")?.value,
-                    p6: document.getElementById("p6")?.value,
-                    p6_unit: document.getElementById("p6_unit")?.value,
+                    //p6: document.getElementById("p6")?.value,
+                    //p6_unit: document.getElementById("p6_unit")?.value,
                     interestRate: document.getElementById("interestRate")?.value,
                     carbonPrice: document.getElementById("carbonPrice")?.value,
                     p7_unit: document.getElementById("p7_unit")?.value,
@@ -570,7 +491,92 @@
 
 
         </script>
-        <hr>
+        
+        <br>
+
+    <h1>Output Tables for your Inputs</h1>
+    <ul>
+        <table border="1" id="summary_table">
+            <thead>
+                <tr>
+                    <th style="text-align: center;">Item</th>
+                    <th style="text-align: center;">Values</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Years from now will you harvest under a business as usual scenario</td>
+                    <td style="text-align: center;">{{ hyb }}</td>
+                </tr>
+                <tr>
+                    <td>Harvest Year after Extended Rotation</td>
+                    <td style="text-align: center;">{{ hye }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>NET Ecosystem Carbon Sequestration from adopting the planned activity (cumulative) ( t CO2eq).
+                        (additional sequestration as compared to the BAU scenario</td>
+                    <td style="text-align: center;">{{ eco_carbon }}</td>
+                </tr>
+                <tr>
+                    <td>Benefit from Extending Rotation (i.e., the difference between BAU and Planned Activity Scenario
+                        results) (t CO2eq). )</td>
+                    <td style="text-align: center;">{{ benefit }}</td>
+                </tr>
+                <tr>
+                    <td>Area subject to management activity (acres) </td>
+                    <td style="text-align: center;">{{ area }}</td>
+                </tr>
+                <tr>
+                    <td>Carbon sequestration in living and dead carbon pools (not soil) (t CO2eq)</td>
+                    <td style="text-align: center;">{{ carbon_seq }}</td>
+                </tr>
+                <tr>
+                    <td>TOTAL HWP Biogenic Carbon Stored from Harvest (t CO2eq)</td>
+                    <td style="text-align: center;">{{ total_hwp }}</td>
+                </tr>
+                <tr>
+                    <td>TOTAL AFOLU (Forest) BIOGENIC CARBON STOCK CHANGE (FLUX) from Management Action and Harvest (t
+                        CO2eq).</td>
+                    <td style="text-align: center;">{{ total_afolu }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Output Tables for your Inputs</h2>
+
+        <table border="1" id="summary_table">
+            <thead>
+                <tr>
+                    <th style="text-align: center;">Item</th>
+                    <th style="text-align: center;">Wood Volume (CCF)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for value in ccf.combined %}
+                <tr>
+                    <td>{{ value }} - Business as Usual (BAU)</td>
+                    <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
+                </tr>
+                {% endfor %}
+                {% for value in ccf.combined %}
+                <tr>
+                    <td>{{ value }} - Extended Rotation</td>
+                    <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
+                </tr>
+                {% endfor %}
+                {% for value in ccf.combined %}
+                <tr>
+                    <td>{{ value }} - Difference</td>
+                    <td style="text-align: center;">{{ ccf.a_minus_b_values[loop.index0] }}</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+    </ul>
+
+    
 </body>
 
 </html>

@@ -343,32 +343,32 @@ def calculate_factor():
         unit = prices[value]["unit"]
         val = prices[value]["value"]
         if value == "Softwood Sawlog":
-            if unit == "mbf-international":
+            if unit == "$/MBF (International)l":
                 multiple = x1
-            elif unit == "mbf-scribner":
+            elif unit == "$/MBF (Scribner)":
                 multiple = x1 * z1
-            elif unit == "mbf-doyle":
+            elif unit == "$/MBF (Doyle)":
                 multiple = x1 * z2
             else:
                 multiple = 1            
         elif value == "Softwood Pulpwood":
-            if unit == "mbf-other":
+            if unit == "$/cord":
                 multiple = x9
             else:
                 multiple = 1
         elif value == "Softwood Fuelwood":
             multiple = 1
         elif value == "Hardwood Sawlog":
-            if unit == "mbf-international":
+            if unit == "$/MBF (International)":
                 multiple = x2
-            elif unit == "mbf-scribner":
+            elif unit == "$/MBF (Scribner)":
                 multiple = x2 * z1
-            elif unit == "mbf-doyle":
+            elif unit == "$/MBF (Doyle)":
                 multiple = x2 * z2
             else:
                 multiple = 1
         elif value == "Hardwood Pulpwood":
-            if unit == "mbf-other":
+            if unit == "$/cord":
                 multiple = x10
             else:
                 multiple = 1
@@ -575,7 +575,13 @@ def finaloutput():
         total_afolu=format_number_with_commas(safe_round(total_afolu)),
         benefit=format_number_with_commas(safe_round(benefit)),
         area=format_number_with_commas(safe_round(g_area)),
-        economic_data=ec_data
+        economic_data=ec_data,
+        npv1_per_acre = format_number_with_commas(safe_round(npv1/g_area)),
+        npv2_per_acre = format_number_with_commas(safe_round(npv2/g_area)),
+        npv21_per_acre = format_number_with_commas(safe_round(npv21/g_area)),
+        npv3_per_acre = format_number_with_commas(safe_round(npv3/g_area)),
+        npv4_per_acre = format_number_with_commas(safe_round(npv4/g_area)),
+        npv5_per_acre = format_number_with_commas(safe_round(npv5/g_area))
     )
 
 @app.route('/summary')
@@ -605,4 +611,4 @@ def summary():
     )
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

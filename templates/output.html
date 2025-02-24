@@ -130,6 +130,57 @@
             margin: 10px 0;
             /* Space between paragraphs */
         }
+
+        .custom-footer {
+            background-color: #b5d1a7;
+            /* Light green background */
+            border: 2px solid #4d7942;
+            /* Darker green border */
+            /* padding: 20px; */
+            font-family: Arial, sans-serif;
+            color: #000;
+            /* Black text */
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            /* Space between text and logos */
+            align-items: center;
+            /* Align logos vertically with the text */
+        }
+
+        .footer-text {
+            flex: 1;
+            /* Take up remaining space */
+            text-align: center;
+            margin-right: 20px;
+            /* Space between text and logos */
+        }
+
+        .footer-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .footer-subtitle {
+            font-size: 14px;
+            margin-top: 0;
+        }
+
+        .footer-logos {
+            display: flex;
+            flex-direction: row;
+            /* Stack logos vertically */
+            /* gap: 10px; */
+            /* Add space between logos */
+        }
+
+        .footer-logo {
+            height: 99%;
+            /* Adjust size as needed */
+        }
     </style>
 </head>
 
@@ -275,6 +326,42 @@
             onclick="performEconomicAnalysis()">
     </div>
     <hr>
+    <br>
+
+        <p style="text-align: center;">Disclaimer: This tool is adapted from the <a
+                href="https://1drv.ms/x/c/55d6028ef742f77a/EXAh7Lb33iNDnbs53seitNYB2o1Qy7mLYhC1Zrc7JC4mKw?e=iroV5X"
+                target="_blank">Excel Document</a> developed by Stockmann et al. (2024)
+            following the methods for <a href="https://www.usda.gov/oce/entity-scale-ghg-methods/chapter-5"
+                target="_blank">Manage Forest Systems</a> developed by US Forest Services.</p>
+        <p style="text-align: center;"> We are not responsible for quantifying the carbon sequestration and GHG emission
+            estimations.</p>
+
+        <!--<p style="text-align: center;">Please click the link for detailed method on Quantifying Greenhouse Gas Sources-->
+        <!--    and Sinks for Managed Forest Systems.</p>-->
+        <footer class="custom-footer">
+            <div class="footer-container">
+                <div class="footer-text">
+                    <p class="footer-title">
+                        VERSION 1.0 Excel Workbook to Support 'Level I' Quantification Approaches for the Managed Forest
+                        Systems Chapter within the 2024 update to the USDA Publication
+                        <em>Quantifying Greenhouse Gas Fluxes in Agriculture and Forestry: Methods for Entity-Scale
+                            Inventory</em>
+                    </p>
+                    <p class="footer-subtitle">
+                        Stockmann, K. et all; Lister, A.; Murray, L.; Woodall, C.; Nepal, P.; Smith, J.; Gu, H.; Khatri, P.;
+                        Urbanski, S.; Riley, K.; Shaw, J. 2024.
+                        <em>USDA Greenhouse Gas Flux Entity-Scale Guidelines for Managed Forest Systems Level 1 Workbook
+                            Tool (Version 1.0)</em>
+                    </p>
+                </div>
+                <div class="footer-logos">
+                    <img src="{{ url_for('static', filename='img/usda-logo.png') }}" alt="USDA Logo"
+                        class="footer-logo">
+                    <img src="{{ url_for('static', filename='img/forest-service-logo.png') }}" alt="Forest Service Logo"
+                        class="footer-logo">
+                </div>
+            </div>
+        </footer>
 </body>
 <script>
     function performEconomicAnalysis() {

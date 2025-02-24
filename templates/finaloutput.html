@@ -350,39 +350,48 @@
         <thead>
             <tr>
                 <th style="text-align: center;">Metric</th>
-                <th style="text-align: center;">Value</th>
+                <th style="text-align: center;">Value (acres)</th>
+                <th style="text-align: center;">$/acre</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Net Present Value (NPV) of forestry activities without extended rotation.</td>
+                <td>Present Value (PV) of forestry activities without extended rotation.</td>
                 <td style="text-align: center;" id="npv1">{{ npv1 }}</td>
+                <td style="text-align: center;">{{ npv1_per_acre }}</td>
             </tr>
             <tr>
-                <td>NPV of forestry activities after extending rotation without carbon payments.</td>
+                <td>PV of forestry activities after extending rotation without carbon payments.</td>
                 <td style="text-align: center;" id="npv2">{{ npv2 }}</td>
+                <td style="text-align: center;">{{ npv2_per_acre }}</td>
             </tr>
             <tr>
                 <td>Economic loss of extending rotation for carbon management without carbon payment,</td>
                 <td style="text-align: center;" id="npv21">{{ npv21 }}</td>
+                <td style="text-align: center;">{{ npv21_per_acre }}</td>
             </tr>
             <tr>
                 <td>Revenue for carbon payment for enrolling into a carbon management program with extended
                     rotation,</td>
                 <td style="text-align: center;" id="npv3">{{ npv3 }}</td>
+                <td style="text-align: center;">{{ npv3_per_acre }}</td>
             </tr>
             <tr>
-                <td>NPV of forestry activities after extending rotation with carbon payments.</td>
+                <td>PV of forestry activities after extending rotation with carbon payments.</td>
                 <td style="text-align: center;" id="npv4">{{ npv4 }}</td>
+                <td style="text-align: center;">{{ npv4_per_acre }}</td>
             </tr>
             <tr>
                 <td>Economic loss/benefit of extending rotation for carbon management with carbon payment,</td>
                 <td style="text-align: center;" id="npv5">{{ npv5 }}</td>
+                <td style="text-align: center;">{{ npv5_per_acre }}</td>
             </tr>
         </tbody>
     </table>
 
-    <h2>Output Tables for your Inputs</h2>
+    <p style="text-align: center;">Note: A negative value represents a loss</p>
+
+    <h2>Information From Previous Tables</h2>
 
     <table border="1" id="summary_table">
         <thead>
@@ -412,7 +421,7 @@
                 <td style="text-align: center;">{{ benefit }}</td>
             </tr>
             <tr>
-                <td>Area subject to management activity </td>
+                <td>Area subject to management activity (acres) </td>
                 <td style="text-align: center;">{{ area }}</td>
             </tr>
             <tr>
@@ -430,8 +439,8 @@
             </tr>
         </tbody>
     </table>
-
-    <h2>Output Tables for your Inputs</h2>
+    
+    <h2>Information on Harvest from Business as Usual (BAU) and Extended Rotation</h2>
 
     <table border="1" id="summary_table">
         <thead>
@@ -445,7 +454,7 @@
         <tbody>
             {% for value in ccf.combined %}
                 <tr>
-                    <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator (BAU) ‘ sheet</td>
+                    <td>{{ value }} - Business as Usual (BAU)</td>
                     <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
                     <td style="text-align: center;">{{ ccf.a_values[loop.index0] }}</td>
                     {% if 'Softwood Sawlog' in value %}
@@ -466,7 +475,7 @@
                 </tr>
             
                 <tr>
-                    <td>{{ value }} - Adjusted Value (CCF) from the ‘Harvest Carbon calculator ‘ sheet</td>
+                    <td>{{ value }} - Extended Rotation</td>
                     <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
                     <td style="text-align: center;">{{ ccf.b_values[loop.index0] }}</td>
                     {% if 'Softwood Sawlog' in value %}
@@ -510,7 +519,7 @@
         </tbody>
     </table>
 
-    <p style="text-align: center;">Note: A negative value represents a loss</p>
+    <p style="text-align: center;">Note: The harvest in Business as usual and Extended rotation does not happen in the same year. The differences presented here is for information only. We use Present Value approach to account for harvest (converted to revenues at different years) to perform economic analysis to account for harvesting in different years.</p>
 
     <hr>
 
