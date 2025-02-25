@@ -10,6 +10,21 @@ import time
 app = Flask(__name__)
 application = app
 
+def format_number_with_commas(number):
+    try:
+        # Convert to float first
+        num = float(number)
+        # If it's a whole number, convert to int to remove decimal
+        if num.is_integer():
+            num = int(num)
+        # Format with commas
+        return "{:,}".format(num)
+    except (ValueError, TypeError):
+        return number
+
+# Register the custom filter
+application.jinja_env.filters['format_number_with_commas'] = format_number_with_commas
+
 # Initialize logging
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -295,7 +310,7 @@ def submit_form():
 
 @app.route('/calculate_factor', methods=['POST'])
 def calculate_factor():
-    global prices, ec_data
+    global prices, ec_data, x1, z1, x2, z2, x9, x10
     data = request.get_json()
     ec_data = data.get('economicData', {})
     print(f"ec_data in CF: {ec_data}")
@@ -558,6 +573,7 @@ def finaloutput():
     }
 
     print(f"economic_data: {ec_data}")
+    print(x1, z1, x2, z2, x9, x10)  
     
     return render_template('finaloutput.html', 
         npv1=format_number_with_commas(safe_round(npv1)),
@@ -569,7 +585,7 @@ def finaloutput():
         hyb=format_number_with_commas(safe_round(hyb)),
         hye=format_number_with_commas(safe_round(hye)),
         eco_carbon=format_number_with_commas(safe_round(eco_carbon)),
-        ccf=rounded_ccf,
+        ccf=ccf,
         carbon_seq=format_number_with_commas(safe_round(carbon_seq)),
         total_hwp=format_number_with_commas(safe_round(total_hwp)),
         total_afolu=format_number_with_commas(safe_round(total_afolu)),
@@ -581,7 +597,13 @@ def finaloutput():
         npv21_per_acre = format_number_with_commas(safe_round(npv21/g_area)),
         npv3_per_acre = format_number_with_commas(safe_round(npv3/g_area)),
         npv4_per_acre = format_number_with_commas(safe_round(npv4/g_area)),
-        npv5_per_acre = format_number_with_commas(safe_round(npv5/g_area))
+        npv5_per_acre = format_number_with_commas(safe_round(npv5/g_area)),
+        x1=x1,
+        z1=z1,
+        x2=x2,
+        z2=z2,
+        x9=x9,
+        x10=x10
     )
 
 @app.route('/summary')
