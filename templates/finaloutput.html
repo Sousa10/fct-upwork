@@ -550,7 +550,35 @@
                 <tr>
                     <td>{{ value }} - Difference</td>
                     <td style="text-align: center;">{{ (ccf.a_minus_b_values[loop.index0])|round|int|format_number_with_commas }}</td>
-                    <td style="text-align: center;">{{ (ccf.a_minus_b_values[loop.index0])|round|int|format_number_with_commas }}</td>
+                    <td style="text-align: center;">
+                        {% if 'Softwood Sawlog' in value %}
+                            {% if economic_data.p1_unit == '$/MBF (International)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x1) - (ccf.b_values[loop.index0]|float * x1))|round|int|format_number_with_commas }}
+                            {% elif economic_data.p1_unit == '$/MBF (Scribner)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x1 * z1) - (ccf.b_values[loop.index0]|float * x1 * z1))|round|int|format_number_with_commas }}
+                            {% elif economic_data.p1_unit == '$/MBF (Doyle)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x1 * z2) - (ccf.b_values[loop.index0]|float * x1 * z2))|round|int|format_number_with_commas }}
+                            {% else %}
+                                {{ ccf.a_minus_b_values[loop.index0] }}
+                            {% endif %}
+                        {% elif 'Softwood Pulpwood' in value and economic_data.p2_unit == '$/cord' %}
+                            {{ ((ccf.a_values[loop.index0]|float * x9) - (ccf.b_values[loop.index0]|float * x9))|round|int|format_number_with_commas }}
+                        {% elif 'Hardwood Pulpwood' in value and economic_data.p5_unit == '$/cord' %}
+                            {{ ((ccf.a_values[loop.index0]|float * x10) - (ccf.b_values[loop.index0]|float * x10))|round|int|format_number_with_commas }}
+                        {% elif 'Hardwood Sawlog' in value %}
+                            {% if economic_data.p4_unit == '$/MBF (International)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x2) - (ccf.b_values[loop.index0]|float * x2))|round|int|format_number_with_commas }}
+                            {% elif economic_data.p4_unit == '$/MBF (Scribner)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x2 * z1) - (ccf.b_values[loop.index0]|float * x2 * z1))|round|int|format_number_with_commas }}
+                            {% elif economic_data.p4_unit == '$/MBF (Doyle)' %}
+                                {{ ((ccf.a_values[loop.index0]|float * x2 * z2) - (ccf.b_values[loop.index0]|float * x2 * z2))|round|int|format_number_with_commas }}
+                            {% else %}
+                                {{ (ccf.a_values[loop.index0] - ccf.b_values[loop.index0])|round|int|format_number_with_commas }}
+                            {% endif %}
+                        {% else %}
+                            {{ (ccf.a_values[loop.index0] - ccf.b_values[loop.index0])|round|int|format_number_with_commas }}
+                        {% endif %}
+                    </td>
                     {% if 'Softwood Sawlog' in value %}
                         <td style="text-align: center;">{{ economic_data.p1_unit }}</td>
                     {% elif 'Softwood Pulpwood' in value %}
