@@ -462,6 +462,7 @@ def format_number_with_commas(x):
 
 @app.route('/output')
 def output():
+    create_linear_graph()  # Generate the graph
     global list_tables
     ind_list = []
     new_tables = []  # To hold the modified tables
@@ -494,6 +495,7 @@ def output():
 
                 # Split the table
                 table1 = table.iloc[:split_index]
+                # print(f"Table 1: {table1}")
                 table2 = table.iloc[split_index:]
 
                 # Reset and format table2
@@ -529,7 +531,7 @@ def output():
     
     # Update the global list_tables with the modified list
     list_tables = new_tables
-    # print(list_tables)
+    print(list_tables[1])
      # Get original column names
     temp_df = list_tables[2].copy()
     original_cols = temp_df.columns.tolist()
@@ -554,6 +556,40 @@ def output():
     # print(list_tables[2])
 
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
+
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+def create_linear_graph():
+    global list_tables
+    # Extract the relevant table
+    table = list_tables[1]
+    
+    # Find the row with the attribute "NET Ecosystem Carbon Flux from adopting the planned activity (cumulative) ( t CO2eq). (additional sequestration as compared to the BAU scenario)"
+    row = table[table['Attributes'].str.contains('NET Ecosystem Carbon Flux from adopting the planned activity')].iloc[0]
+    
+    # Extract the years and values
+    years = table.columns[1:]  # Exclude the 'Attributes' column
+    values = row[1:].replace('', np.nan).fillna(0).astype(float)  # Replace empty strings with NaN, fill NaN with 0, and convert to float
+
+    # Create the linear graph
+    plt.figure(figsize=(10, 6))
+    plt.plot(years, values, marker='o', linestyle='-', color='b')
+    plt.title('NET Ecosystem Carbon Flux from adopting the planned activity (cumulative)')
+    plt.xlabel('Year')
+    plt.ylabel('Carbon Flux (t CO2eq)')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    # Ensure the directory exists
+    os.makedirs('static/img', exist_ok=True)
+    # Save the plot as an image file
+    plt.savefig('static/img/carbon_flux_graph.png')
+
+    # Show the plot
+    plt.show()
 
 # @app.route('/finaloutput')
 # def finaloutput():
