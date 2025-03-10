@@ -462,7 +462,7 @@ def format_number_with_commas(x):
 
 @app.route('/output')
 def output():
-    create_linear_graph()  # Generate the graph
+    
     global list_tables
     ind_list = []
     new_tables = []  # To hold the modified tables
@@ -531,7 +531,7 @@ def output():
     
     # Update the global list_tables with the modified list
     list_tables = new_tables
-    print(list_tables[1])
+    # print(list_tables[2])
      # Get original column names
     temp_df = list_tables[2].copy()
     original_cols = temp_df.columns.tolist()
@@ -555,28 +555,56 @@ def output():
     list_tables[2] = temp_df
     # print(list_tables[2])
 
+    create_linear_graph()  # Generate the graph
+    create_carbon_flux_graph()
+    create_linear_graph_basic_projection()
+
     return render_template('output.html', list_tables=list_tables[1:], ind_list=ind_list[1:])
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def create_linear_graph():
-    global list_tables
-    # Extract the relevant table
-    table = list_tables[1]
-    
-    # Find the row with the attribute "NET Ecosystem Carbon Flux from adopting the planned activity (cumulative) ( t CO2eq). (additional sequestration as compared to the BAU scenario)"
-    row = table[table['Attributes'].str.contains('NET Ecosystem Carbon Flux from adopting the planned activity')].iloc[0]
+def create_graph(table, column_name, row_keyword, title, filename):
+    # Find the row with the specified keyword
+    # print(f"Table columns: {table.columns.tolist()}")
+    # print(f"Table head: \n{table.head()}")
+
+    # Debug prints
+    # print(f"Looking for keyword '{row_keyword}' in column '{column_name}'")
+    # print(f"Matching rows:")
+    # matching_rows = table[table[column_name].str.contains(row_keyword, case=False, na=False)]
+    # print(matching_rows)
+
+    # # Find the row with the specified keyword
+    # if isinstance(column_name, int):
+    #     # If column_name is an index
+    #     row = table[table.iloc[:, column_name].str.contains(row_keyword, case=False, na=False)].iloc[0]
+    # else:
+    #     # If column_name is a column name
+    #     row = table[table[column_name].str.contains(row_keyword, na=False)].iloc[0]
+
+    print(f"Looking for keyword '{row_keyword}' in column '{column_name}'")
+    matches = table[table[column_name].str.contains(row_keyword, na=False, case=False)]
+    print(f"Matching rows:\n{matches}")
+
+    if matches.empty:
+        raise ValueError(f"❌ No rows found matching keyword '{row_keyword}' in column '{column_name}'")
+
+    row = matches.iloc[0]
     
     # Extract the years and values
-    years = table.columns[1:]  # Exclude the 'Attributes' column
-    values = row[1:].replace('', np.nan).fillna(0).astype(float)  # Replace empty strings with NaN, fill NaN with 0, and convert to float
+    years = table.columns[1:]  # Exclude the specified column
+
+    values = row[1:].apply(lambda x: str(x).replace(',', '') if isinstance(x, str) else x)  # Remove commas
+    values = values.replace('', np.nan).fillna(0).astype(float)  # Replace empty strings with NaN, fill NaN with 0, and convert to float
 
     # Create the linear graph
     plt.figure(figsize=(10, 6))
     plt.plot(years, values, marker='o', linestyle='-', color='b')
-    plt.title('NET Ecosystem Carbon Flux from adopting the planned activity (cumulative)')
+    plt.title(title)
     plt.xlabel('Year')
     plt.ylabel('Carbon Flux (t CO2eq)')
     plt.grid(True)
@@ -586,10 +614,56 @@ def create_linear_graph():
     # Ensure the directory exists
     os.makedirs('static/img', exist_ok=True)
     # Save the plot as an image file
-    plt.savefig('static/img/carbon_flux_graph.png')
+    plt.savefig(f'static/img/{filename}')
 
-    # Show the plot
-    plt.show()
+    # Close the plot to free up memory
+    plt.close()
+
+def create_linear_graph():
+    global list_tables
+    create_graph(
+        table=list_tables[1],
+        column_name='Attributes',
+        row_keyword='NET Ecosystem Carbon Flux from adopting the planned activity',
+        title='NET Ecosystem Carbon Flux from adopting the planned activity (cumulative)',
+        filename='carbon_flux_graph.png'
+    )
+
+def create_linear_graph_basic_projection():
+    global list_tables
+    create_graph(
+        table=list_tables[1],
+        column_name='Attributes',
+        row_keyword='Basic Projection or BAU Cumulative ',
+        title='Basic Projection or BAU Cumulative Ecosystem Carbon FLUX (t CO2eq) ',
+        filename='basic_projection_bau.png'
+    )
+
+def create_carbon_flux_graph():
+    global list_tables
+    table = list_tables[2]
+    # print(f"Table structure:\n{table}")  # Debug print
+
+    # Get the first column name
+    first_column = 'ECOSYSTEM CARBON IMPACTS From Forest Growth'
+    
+    # Debug prints
+    # print(f"First column: {first_column}")
+    # print(f"Columns available: {table.columns.tolist()}")
+    # print(f"Looking for row containing: Carbon flux in living and dead carbon pools")
+    
+    try:
+        create_graph(
+            table=table,
+            column_name=first_column,
+            row_keyword='Carbon flux in living and dead carbon pools',
+            title='Carbon flux in living and dead carbon pools (not soil)',
+            filename='carbon_flux_living_dead_pools_graph.png'
+        )
+    except Exception as e:
+        print(f"Error in create_carbon_flux_graph: {e}")
+        print(f"Table content:\n{table}")
+        raise
 
 # @app.route('/finaloutput')
 # def finaloutput():
