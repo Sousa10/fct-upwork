@@ -138,7 +138,7 @@ class OneDriveHelper:
         response = requests.post(endpoint, headers=headers)
         response.raise_for_status()
 
-    def update_excel(self, file_path, worksheet_name, range_address, values):
+    def update_excel(self, worksheet_name, range_address, values):
         print(f"📂 Updating {file_path}...")  # Debugging log
     
         try:
@@ -154,7 +154,7 @@ class OneDriveHelper:
         
         # Refresh workbook before making changes
         # self.refresh_workbook(file_path, session_id)
-        
+        file_path = self._get_user_excel_file()
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         
         headers = {
@@ -180,8 +180,42 @@ class OneDriveHelper:
         
         self.close_session(file_path, session_id)  # Close session after update
         return response.json()
+    
+    def _get_user_excel_file(self):
+        """Find or create the user's personal Excel file."""
+        
+        # 📌 Check if the user already has a file
+        endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = requests.get(endpoint, headers=headers).json()
 
-    def read_excel(self, file_path, worksheet_name, range_address):
+        for item in response.get("value", []):
+            if "excel workbook" in item["name"].lower():
+                return item["name"]  # Return existing file ID
+        
+        # ❌ If no file exists, create a copy from a template
+        return self._copy_template_excel()
+
+    
+    def _copy_template_excel(self):
+        """Copy a template Excel file for a new user."""
+        
+        template_id = "55D6028EF742F77A!s6dcadefacd544780aa6262a995b23109"  # Replace with the actual file ID of the template
+        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/items/{template_id}/copy"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        
+        data = {
+            "parentReference": {"path": "/drive/root:"},
+            "name": "Copy of Excel Workbook V1.2.xlsx"
+        }
+
+        response = requests.post(endpoint, headers=headers, json=data)
+        response.raise_for_status()
+
+        return response.json().get("id")  # Return new file ID
+
+    def read_excel(self, worksheet_name, range_address):
+        file_path = self._get_user_excel_file()
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/worksheets/{worksheet_name}/range(address='{range_address}')"
         headers = {
             'Authorization': f'Bearer {self.access_token}'
@@ -201,22 +235,6 @@ class OneDriveHelper:
             print(f"Error: {e.response.text}")
             raise
     
-    def recalculate_workbook(self, file_path):
-        """
-        Triggers recalculation for the entire workbook.
-        """
-        endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/workbook/application/calculate"
-        headers = {'Authorization': f'Bearer {self.access_token}'}
-        data = {"calculationType": "Full"}  # Options: Full, Recalculate
-        response = requests.post(endpoint, headers=headers, json=data)
-        # Handle 204 response
-        if response.status_code == 204:
-            return {"status": "Success", "message": "Recalculation completed with no response body."}
-        
-        # Handle other errors
-        response.raise_for_status()
-        return response.json()
-    
     def list_root_files(self):
         endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children"
         headers = {'Authorization': f'Bearer {self.access_token}'}
@@ -231,15 +249,6 @@ class OneDriveHelper:
         response = requests.get(endpoint, headers=headers)
         response.raise_for_status()
         return response.json()
-        # try:
-        #     response = requests.get(endpoint, headers=headers)
-        #     response.raise_for_status()
-        #     items = response.json().get("value", [])
-        #     files = [item for item in items if "file" in item]
-        #     return files
-        # except requests.exceptions.RequestException as e:
-        #     print(f"Error: {e.response.text}")
-        #     raise
     
     def get_file_metadata(self, file_path):
         endpoint = f"https://graph.microsoft.com/v1.0/me/drive/root:/{file_path}:/"

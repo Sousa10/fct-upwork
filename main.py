@@ -51,7 +51,7 @@ def index():
     
     return render_template('index.html')
 
-def wait_for_data_update(onedrive, file_path, expected_values, sheet_name, range_address, max_wait=10):
+def wait_for_data_update(onedrive, expected_values, sheet_name, range_address, max_wait=10):
     """
     Wait until the updated values are actually reflected in OneDrive.
     """
@@ -59,7 +59,7 @@ def wait_for_data_update(onedrive, file_path, expected_values, sheet_name, range
     
     while time.time() - start_time < max_wait:
         print("⏳ Checking if OneDrive has updated values...")
-        response = onedrive.read_excel(file_path, sheet_name, range_address)
+        response = onedrive.read_excel(sheet_name, range_address)
         data = response.get('values')
 
         if data == expected_values:
@@ -126,7 +126,7 @@ def submit_form():
         values = [[int(area)], [region], [grp], [origin], [age], [int(hyb)], [int(hye)]]
         try:
             onedrive.update_excel(
-                FILE_PATH,
+                # FILE_PATH,
                 # EXCEL_FILE_ID,
                 'User Data Entry',
                 'C3:C9',
@@ -155,11 +155,11 @@ def submit_form():
         print("Waiting for Excel update to complete...")
 
         # Force OneDrive to refresh the data
-        wait_for_data_update(onedrive, FILE_PATH, values, 'User Data Entry', 'C3:C9')
+        wait_for_data_update(onedrive, values, 'User Data Entry', 'C3:C9')
         
         try:
-            harvest_carbon_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator', 'A1:Z100')
-            harvest_carbon_bau_response = onedrive.read_excel(FILE_PATH, 'Harvest Carbon Calculator (BAU)', 'A1:Z100')
+            harvest_carbon_response = onedrive.read_excel('Harvest Carbon Calculator', 'A1:Z100')
+            harvest_carbon_bau_response = onedrive.read_excel('Harvest Carbon Calculator (BAU)', 'A1:Z100')
             
             # Extract values from the response
             harvest_carbon = harvest_carbon_response.get('values')
@@ -213,7 +213,7 @@ def submit_form():
 
         # list_table_temp = pd.read_csv(full_url).iloc[6:12, 6:18]
         try:
-            list_table_temp = onedrive.read_excel(FILE_PATH, 'User Data Entry', 'G9:R14')['values']
+            list_table_temp = onedrive.read_excel('User Data Entry', 'G9:R14')['values']
             logging.debug(f"UserDataEntry Data: {list_table_temp}")
         except Exception as e:
             logging.error(f"Error reading UserDataEntry data: {str(e)}")
@@ -269,7 +269,7 @@ def submit_form():
 
         try:
             # Fetch data from the OneDrive Excel sheet
-            forest_mgmt_response = onedrive.read_excel(FILE_PATH, forest_mgmt_sheet_name, 'A4:G26')['values']
+            forest_mgmt_response = onedrive.read_excel(forest_mgmt_sheet_name, 'A4:G26')['values']
             logging.debug(f"Forest Mgmt Data: {forest_mgmt_response}")
             
             # Convert the data into a DataFrame
