@@ -6,6 +6,7 @@ import re
 
 class OneDriveHelper:
     def __init__(self):
+        self.token_cache_file = os.path.expanduser("~/.onedrive_tokens/token_cache.bin")  # Persistent token cache
         self.token_cache = msal.SerializableTokenCache()
         self.app = msal.PublicClientApplication(
             AZURE_SETTINGS['client_id'],
