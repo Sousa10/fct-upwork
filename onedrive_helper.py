@@ -8,6 +8,11 @@ class OneDriveHelper:
     def __init__(self):
         self.token_cache_file = os.path.expanduser("~/.onedrive_tokens/token_cache.bin")  # Persistent token cache
         self.token_cache = msal.SerializableTokenCache()
+        
+         # Load token cache from file if it exists
+        if os.path.exists(self.token_cache_file):
+            self.token_cache.deserialize(open(self.token_cache_file, "r").read())
+            
         self.app = msal.PublicClientApplication(
             AZURE_SETTINGS['client_id'],
             authority=AZURE_SETTINGS['authority'],
@@ -16,27 +21,29 @@ class OneDriveHelper:
         self.session = requests.Session()  #FIXED: Initialize session
         self.access_token = self._get_token()
         # self.check_token_permissions(self.access_token)
+    
+    def _save_token_cache(self):
+        """Save token cache to file to persist tokens across sessions."""
+        with open(self.token_cache_file, "w") as f:
+            f.write(self.token_cache.serialize())
 
     def refresh_token(self):
-        accounts = self.app.get_accounts()
-        if accounts:
-            result = self.app.acquire_token_silent(AZURE_SETTINGS['scopes'], account=accounts[0])
-            if 'access_token' in result:
-                open('token_cache.bin', 'w').write(self.token_cache.serialize())
-                return result['access_token']
+        """Manually refresh token if needed."""
+        print("🔄 Manually refreshing token...")
         return self._get_token()
 
     def _get_token(self):
         # Load token cache from file if it exists
-        cache_file = 'token_cache.bin'
-        if os.path.exists(cache_file):
-            self.token_cache.deserialize(open(cache_file, 'r').read())
+        # cache_file = 'token_cache.bin'
+        # if os.path.exists(cache_file):
+        #     self.token_cache.deserialize(open(cache_file, 'r').read())
 
         accounts = self.app.get_accounts()
         if accounts:
             result = self.app.acquire_token_silent(AZURE_SETTINGS['scopes'], account=accounts[0])
             if result and 'access_token' in result:
-                print("🔄 Using cached access token")
+                print("🔄 Using refreshed access token")
+                self._save_token_cache()  # Save updated token cache
                 return result['access_token']
 
         # If no valid token is found, initiate device flow
@@ -50,7 +57,7 @@ class OneDriveHelper:
 
         if 'access_token' in result:
             # Save token cache to file
-            open(cache_file, 'w').write(self.token_cache.serialize())
+            self._save_token_cache()  # Save new token
             return result['access_token']
     
         raise Exception("Could not acquire access token. Error: {}".format(result.get('error_description', 'No error description available')))
